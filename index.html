@@ -541,12 +541,30 @@
     <div class="section-sub">Current Vegas consensus odds — auto-categorized by pool tier</div>
 
     <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <input type="text" id="fieldSearch" placeholder="Search golfer..." style="max-width:220px;" oninput="filterField()">
+      <input type="text" id="fieldSearch" placeholder="Search golfer or country..." style="max-width:240px;" oninput="filterField()">
       <select id="fieldFilter" style="max-width:160px;" onchange="filterField()">
         <option value="all">All Pools</option>
         <option value="A">Pool A (Favorites)</option>
         <option value="B">Pool B (Mid-Tier)</option>
         <option value="C">Pool C (Long Shots)</option>
+      </select>
+      <select id="countryFilter" style="max-width:160px;" onchange="filterField()">
+        <option value="all">All Countries</option>
+        <option value="USA">🇺🇸 USA</option>
+        <option value="ENG">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</option>
+        <option value="AUS">🇦🇺 Australia</option>
+        <option value="NIR">🇬🇧 N. Ireland</option>
+        <option value="SCO">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland</option>
+        <option value="IRL">🇮🇪 Ireland</option>
+        <option value="ESP">🇪🇸 Spain</option>
+        <option value="JPN">🇯🇵 Japan</option>
+        <option value="KOR">🇰🇷 South Korea</option>
+        <option value="SWE">🇸🇪 Sweden</option>
+        <option value="NOR">🇳🇴 Norway</option>
+        <option value="DEN">🇩🇰 Denmark</option>
+        <option value="CAN">🇨🇦 Canada</option>
+        <option value="RSA">🇿🇦 South Africa</option>
+        <option value="Other">🌍 Other</option>
       </select>
     </div>
 
@@ -563,6 +581,7 @@
           <tr>
             <th>#</th>
             <th>Golfer</th>
+            <th>Country</th>
             <th>Odds</th>
             <th>Pool</th>
             <th>OWGR</th>
@@ -816,99 +835,99 @@ const ENTRY_FEE = 25;
 
 // 2026 Masters Field with Vegas odds
 const GOLFERS = [
-  // ── POOL A: Favorites — 30/1 or better (oddsNum ≤ 3000) ─────────────────────
-  {name:"Scottie Scheffler",          odds:"+410",   oddsNum:410,   pool:"A", owgr:1,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Jon Rahm",                   odds:"+850",   oddsNum:850,   pool:"A", owgr:3,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Rory McIlroy",               odds:"+1025",  oddsNum:1025,  pool:"A", owgr:2,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Bryson DeChambeau",          odds:"+1100",  oddsNum:1100,  pool:"A", owgr:4,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Ludvig Åberg",               odds:"+1750",  oddsNum:1750,  pool:"A", owgr:5,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Xander Schauffele",          odds:"+1850",  oddsNum:1850,  pool:"A", owgr:6,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Cameron Young",              odds:"+2400",  oddsNum:2400,  pool:"A", owgr:10,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Tommy Fleetwood",            odds:"+2500",  oddsNum:2500,  pool:"A", owgr:7,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Matt Fitzpatrick",           odds:"+2600",  oddsNum:2600,  pool:"A", owgr:9,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Collin Morikawa",            odds:"+3100",  oddsNum:3100,  pool:"A", owgr:11,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  // ── POOL B: Mid-Tier — 33/1 to 150/1 (oddsNum 3300–15000) ──────────────────
-  {name:"Justin Rose",                odds:"+3600",  oddsNum:3600,  pool:"B", owgr:13,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Jordan Spieth",              odds:"+3800",  oddsNum:3800,  pool:"B", owgr:20,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Brooks Koepka",              odds:"+3800",  oddsNum:3800,  pool:"B", owgr:17,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Hideki Matsuyama",           odds:"+3900",  oddsNum:3900,  pool:"B", owgr:16,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Robert MacIntyre",           odds:"+4000",  oddsNum:4000,  pool:"B", owgr:12,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Russell Henley",             odds:"+4200",  oddsNum:4200,  pool:"B", owgr:18,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Chris Gotterup",             odds:"+4300",  oddsNum:4300,  pool:"B", owgr:21,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Patrick Reed",               odds:"+4500",  oddsNum:4500,  pool:"B", owgr:15,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Viktor Hovland",             odds:"+4600",  oddsNum:4600,  pool:"B", owgr:22,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Si Woo Kim",                 odds:"+4700",  oddsNum:4700,  pool:"B", owgr:24,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Min Woo Lee",                odds:"+5400",  oddsNum:5400,  pool:"B", owgr:9,   r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Justin Thomas",              odds:"+5500",  oddsNum:5500,  pool:"B", owgr:25,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Patrick Cantlay",            odds:"+5700",  oddsNum:5700,  pool:"B", owgr:26,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Adam Scott",                 odds:"+6200",  oddsNum:6200,  pool:"B", owgr:19,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Akshay Bhatia",             odds:"+6600",  oddsNum:6600,  pool:"B", owgr:23,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Sepp Straka",                odds:"+6700",  oddsNum:6700,  pool:"B", owgr:28,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Jason Day",                  odds:"+6900",  oddsNum:6900,  pool:"B", owgr:30,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Jake Knapp",                 odds:"+6900",  oddsNum:6900,  pool:"B", owgr:32,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Tyrrell Hatton",             odds:"+6900",  oddsNum:6900,  pool:"B", owgr:33,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Shane Lowry",                odds:"+7000",  oddsNum:7000,  pool:"B", owgr:29,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Sam Burns",                  odds:"+7200",  oddsNum:7200,  pool:"B", owgr:35,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Corey Conners",              odds:"+8200",  oddsNum:8200,  pool:"B", owgr:34,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Nicolai Højgaard",           odds:"+8400",  oddsNum:8400,  pool:"B", owgr:38,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Kurt Kitayama",              odds:"+8800",  oddsNum:8800,  pool:"B", owgr:40,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"J.J. Spaun",                 odds:"+8800",  oddsNum:8800,  pool:"B", owgr:42,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Jacob Bridgeman",            odds:"+9400",  oddsNum:9400,  pool:"B", owgr:44,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Maverick McNealy",           odds:"+9800",  oddsNum:9800,  pool:"B", owgr:46,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Cameron Smith",              odds:"+10000", oddsNum:10000, pool:"B", owgr:48,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Harris English",             odds:"+10500", oddsNum:10500, pool:"B", owgr:50,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Gary Woodland",              odds:"+11000", oddsNum:11000, pool:"B", owgr:52,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Ben Griffin",                odds:"+11000", oddsNum:11000, pool:"B", owgr:27,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Daniel Berger",              odds:"+11000", oddsNum:11000, pool:"B", owgr:36,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Max Homa",                   odds:"+11500", oddsNum:11500, pool:"B", owgr:43,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Sungjae Im",                 odds:"+12000", oddsNum:12000, pool:"B", owgr:37,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Rasmus Højgaard",            odds:"+13000", oddsNum:13000, pool:"B", owgr:39,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Keegan Bradley",             odds:"+14000", oddsNum:14000, pool:"B", owgr:41,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  // ── POOL C: Long Shots — 200/1 or higher (oddsNum 16000+) ───────────────────
-  {name:"Harry Hall",                 odds:"+16000", oddsNum:16000, pool:"C", owgr:55,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Marco Penge",                odds:"+16000", oddsNum:16000, pool:"C", owgr:57,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Alex Noren",                 odds:"+16500", oddsNum:16500, pool:"C", owgr:58,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Ryan Gerard",                odds:"+17000", oddsNum:17000, pool:"C", owgr:60,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Nick Taylor",                odds:"+19500", oddsNum:19500, pool:"C", owgr:62,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Aaron Rai",                  odds:"+19500", oddsNum:19500, pool:"C", owgr:64,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Brian Harman",               odds:"+20000", oddsNum:20000, pool:"C", owgr:65,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Sam Stevens",                odds:"+21000", oddsNum:21000, pool:"C", owgr:66,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Sergio Garcia",              odds:"+22500", oddsNum:22500, pool:"C", owgr:156, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Ryan Fox",                   odds:"+22500", oddsNum:22500, pool:"C", owgr:68,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Wyndham Clark",              odds:"+22500", oddsNum:22500, pool:"C", owgr:47,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Max Greyserman",             odds:"+23000", oddsNum:23000, pool:"C", owgr:70,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Dustin Johnson",             odds:"+24000", oddsNum:24000, pool:"C", owgr:72,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Casey Jarvis",               odds:"+25000", oddsNum:25000, pool:"C", owgr:69,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Carlos Ortiz",               odds:"+26000", oddsNum:26000, pool:"C", owgr:75,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Haotong Li",                 odds:"+28000", oddsNum:28000, pool:"C", owgr:77,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Tom McKibbin",               odds:"+28000", oddsNum:28000, pool:"C", owgr:79,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Nico Echavarria",            odds:"+31000", oddsNum:31000, pool:"C", owgr:80,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Kristoffer Reitan",          odds:"+31000", oddsNum:31000, pool:"C", owgr:82,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Rasmus Neergaard-Petersen",  odds:"+32500", oddsNum:32500, pool:"C", owgr:68,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"John Keefer",                odds:"+34000", oddsNum:34000, pool:"C", owgr:85,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Michael Kim",                odds:"+35000", oddsNum:35000, pool:"C", owgr:87,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Andrew Novak",               odds:"+40000", oddsNum:40000, pool:"C", owgr:90,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Aldrich Potgieter",          odds:"+41000", oddsNum:41000, pool:"C", owgr:92,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Michael Brennan",            odds:"+43000", oddsNum:43000, pool:"C", owgr:95,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Sami Välimäki",              odds:"+52500", oddsNum:52500, pool:"C", owgr:98,  r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Davis Riley",                odds:"+60000", oddsNum:60000, pool:"C", owgr:100, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Charl Schwartzel",           odds:"+60000", oddsNum:60000, pool:"C", owgr:150, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Bubba Watson",               odds:"+60000", oddsNum:60000, pool:"C", owgr:200, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Zach Johnson",               odds:"+60000", oddsNum:60000, pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Brian Campbell",             odds:"+250000",oddsNum:250000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Ethan Fang (a)",             odds:"+250000",oddsNum:250000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Danny Willett",              odds:"+250000",oddsNum:250000,pool:"C", owgr:160, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Pongsapak Laopakdee (a)",    odds:"+400000",oddsNum:400000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Vijay Singh",                odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Mason Howell (a)",           odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Mateo Pulcini (a)",          odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Jackson Herrington (a)",     odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Angel Cabrera",              odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Naoyuki Kataoka (a)",        odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Brandon Holtz (a)",          odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Mike Weir",                  odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Fred Couples",               odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
-  {name:"Jose Maria Olazabal",        odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  // ── POOL A: Favorites — 30/1 or better ──────────────────────────────────────
+  {name:"Scottie Scheffler",          country:"USA",  flag:"🇺🇸", odds:"+410",   oddsNum:410,   pool:"A", owgr:1,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jon Rahm",                   country:"ESP",  flag:"🇪🇸", odds:"+850",   oddsNum:850,   pool:"A", owgr:3,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Rory McIlroy",               country:"NIR",  flag:"🇬🇧", odds:"+1025",  oddsNum:1025,  pool:"A", owgr:2,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Bryson DeChambeau",          country:"USA",  flag:"🇺🇸", odds:"+1100",  oddsNum:1100,  pool:"A", owgr:4,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Ludvig Åberg",               country:"SWE",  flag:"🇸🇪", odds:"+1750",  oddsNum:1750,  pool:"A", owgr:5,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Xander Schauffele",          country:"USA",  flag:"🇺🇸", odds:"+1850",  oddsNum:1850,  pool:"A", owgr:6,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Cameron Young",              country:"USA",  flag:"🇺🇸", odds:"+2400",  oddsNum:2400,  pool:"A", owgr:10,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Tommy Fleetwood",            country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+2500",  oddsNum:2500,  pool:"A", owgr:7,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Matt Fitzpatrick",           country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+2600",  oddsNum:2600,  pool:"A", owgr:9,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Collin Morikawa",            country:"USA",  flag:"🇺🇸", odds:"+3100",  oddsNum:3100,  pool:"A", owgr:11,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  // ── POOL B: Mid-Tier — 33/1 to 150/1 ───────────────────────────────────────
+  {name:"Justin Rose",                country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+3600",  oddsNum:3600,  pool:"B", owgr:13,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jordan Spieth",              country:"USA",  flag:"🇺🇸", odds:"+3800",  oddsNum:3800,  pool:"B", owgr:20,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Brooks Koepka",              country:"USA",  flag:"🇺🇸", odds:"+3800",  oddsNum:3800,  pool:"B", owgr:17,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Hideki Matsuyama",           country:"JPN",  flag:"🇯🇵", odds:"+3900",  oddsNum:3900,  pool:"B", owgr:16,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Robert MacIntyre",           country:"SCO",  flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", odds:"+4000",  oddsNum:4000,  pool:"B", owgr:12,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Russell Henley",             country:"USA",  flag:"🇺🇸", odds:"+4200",  oddsNum:4200,  pool:"B", owgr:18,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Chris Gotterup",             country:"USA",  flag:"🇺🇸", odds:"+4300",  oddsNum:4300,  pool:"B", owgr:21,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Patrick Reed",               country:"USA",  flag:"🇺🇸", odds:"+4500",  oddsNum:4500,  pool:"B", owgr:15,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Viktor Hovland",             country:"NOR",  flag:"🇳🇴", odds:"+4600",  oddsNum:4600,  pool:"B", owgr:22,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Si Woo Kim",                 country:"KOR",  flag:"🇰🇷", odds:"+4700",  oddsNum:4700,  pool:"B", owgr:24,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Min Woo Lee",                country:"AUS",  flag:"🇦🇺", odds:"+5400",  oddsNum:5400,  pool:"B", owgr:9,   r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Justin Thomas",              country:"USA",  flag:"🇺🇸", odds:"+5500",  oddsNum:5500,  pool:"B", owgr:25,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Patrick Cantlay",            country:"USA",  flag:"🇺🇸", odds:"+5700",  oddsNum:5700,  pool:"B", owgr:26,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Adam Scott",                 country:"AUS",  flag:"🇦🇺", odds:"+6200",  oddsNum:6200,  pool:"B", owgr:19,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Akshay Bhatia",             country:"USA",  flag:"🇺🇸", odds:"+6600",  oddsNum:6600,  pool:"B", owgr:23,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sepp Straka",                country:"AUT",  flag:"🇦🇹", odds:"+6700",  oddsNum:6700,  pool:"B", owgr:28,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jason Day",                  country:"AUS",  flag:"🇦🇺", odds:"+6900",  oddsNum:6900,  pool:"B", owgr:30,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jake Knapp",                 country:"USA",  flag:"🇺🇸", odds:"+6900",  oddsNum:6900,  pool:"B", owgr:32,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Tyrrell Hatton",             country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+6900",  oddsNum:6900,  pool:"B", owgr:33,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Shane Lowry",                country:"IRL",  flag:"🇮🇪", odds:"+7000",  oddsNum:7000,  pool:"B", owgr:29,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sam Burns",                  country:"USA",  flag:"🇺🇸", odds:"+7200",  oddsNum:7200,  pool:"B", owgr:35,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Corey Conners",              country:"CAN",  flag:"🇨🇦", odds:"+8200",  oddsNum:8200,  pool:"B", owgr:34,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Nicolai Højgaard",           country:"DEN",  flag:"🇩🇰", odds:"+8400",  oddsNum:8400,  pool:"B", owgr:38,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Kurt Kitayama",              country:"USA",  flag:"🇺🇸", odds:"+8800",  oddsNum:8800,  pool:"B", owgr:40,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"J.J. Spaun",                 country:"USA",  flag:"🇺🇸", odds:"+8800",  oddsNum:8800,  pool:"B", owgr:42,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jacob Bridgeman",            country:"USA",  flag:"🇺🇸", odds:"+9400",  oddsNum:9400,  pool:"B", owgr:44,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Maverick McNealy",           country:"USA",  flag:"🇺🇸", odds:"+9800",  oddsNum:9800,  pool:"B", owgr:46,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Cameron Smith",              country:"AUS",  flag:"🇦🇺", odds:"+10000", oddsNum:10000, pool:"B", owgr:48,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Harris English",             country:"USA",  flag:"🇺🇸", odds:"+10500", oddsNum:10500, pool:"B", owgr:50,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Gary Woodland",              country:"USA",  flag:"🇺🇸", odds:"+11000", oddsNum:11000, pool:"B", owgr:52,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Ben Griffin",                country:"USA",  flag:"🇺🇸", odds:"+11000", oddsNum:11000, pool:"B", owgr:27,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Daniel Berger",              country:"USA",  flag:"🇺🇸", odds:"+11000", oddsNum:11000, pool:"B", owgr:36,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Max Homa",                   country:"USA",  flag:"🇺🇸", odds:"+11500", oddsNum:11500, pool:"B", owgr:43,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sungjae Im",                 country:"KOR",  flag:"🇰🇷", odds:"+12000", oddsNum:12000, pool:"B", owgr:37,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Rasmus Højgaard",            country:"DEN",  flag:"🇩🇰", odds:"+13000", oddsNum:13000, pool:"B", owgr:39,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Keegan Bradley",             country:"USA",  flag:"🇺🇸", odds:"+14000", oddsNum:14000, pool:"B", owgr:41,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  // ── POOL C: Long Shots — 200/1 or higher ────────────────────────────────────
+  {name:"Harry Hall",                 country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+16000", oddsNum:16000, pool:"C", owgr:55,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Marco Penge",                country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+16000", oddsNum:16000, pool:"C", owgr:57,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Alex Noren",                 country:"SWE",  flag:"🇸🇪", odds:"+16500", oddsNum:16500, pool:"C", owgr:58,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Ryan Gerard",                country:"USA",  flag:"🇺🇸", odds:"+17000", oddsNum:17000, pool:"C", owgr:60,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Nick Taylor",                country:"CAN",  flag:"🇨🇦", odds:"+19500", oddsNum:19500, pool:"C", owgr:62,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Aaron Rai",                  country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+19500", oddsNum:19500, pool:"C", owgr:64,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Brian Harman",               country:"USA",  flag:"🇺🇸", odds:"+20000", oddsNum:20000, pool:"C", owgr:65,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sam Stevens",                country:"USA",  flag:"🇺🇸", odds:"+21000", oddsNum:21000, pool:"C", owgr:66,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sergio Garcia",              country:"ESP",  flag:"🇪🇸", odds:"+22500", oddsNum:22500, pool:"C", owgr:156, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Ryan Fox",                   country:"NZL",  flag:"🇳🇿", odds:"+22500", oddsNum:22500, pool:"C", owgr:68,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Wyndham Clark",              country:"USA",  flag:"🇺🇸", odds:"+22500", oddsNum:22500, pool:"C", owgr:47,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Max Greyserman",             country:"USA",  flag:"🇺🇸", odds:"+23000", oddsNum:23000, pool:"C", owgr:70,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Dustin Johnson",             country:"USA",  flag:"🇺🇸", odds:"+24000", oddsNum:24000, pool:"C", owgr:72,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Casey Jarvis",               country:"RSA",  flag:"🇿🇦", odds:"+25000", oddsNum:25000, pool:"C", owgr:69,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Carlos Ortiz",               country:"MEX",  flag:"🇲🇽", odds:"+26000", oddsNum:26000, pool:"C", owgr:75,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Haotong Li",                 country:"CHN",  flag:"🇨🇳", odds:"+28000", oddsNum:28000, pool:"C", owgr:77,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Tom McKibbin",               country:"NIR",  flag:"🇬🇧", odds:"+28000", oddsNum:28000, pool:"C", owgr:79,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Nico Echavarria",            country:"COL",  flag:"🇨🇴", odds:"+31000", oddsNum:31000, pool:"C", owgr:80,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Kristoffer Reitan",          country:"NOR",  flag:"🇳🇴", odds:"+31000", oddsNum:31000, pool:"C", owgr:82,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Rasmus Neergaard-Petersen",  country:"DEN",  flag:"🇩🇰", odds:"+32500", oddsNum:32500, pool:"C", owgr:68,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"John Keefer",                country:"USA",  flag:"🇺🇸", odds:"+34000", oddsNum:34000, pool:"C", owgr:85,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Michael Kim",                country:"USA",  flag:"🇺🇸", odds:"+35000", oddsNum:35000, pool:"C", owgr:87,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Andrew Novak",               country:"USA",  flag:"🇺🇸", odds:"+40000", oddsNum:40000, pool:"C", owgr:90,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Aldrich Potgieter",          country:"RSA",  flag:"🇿🇦", odds:"+41000", oddsNum:41000, pool:"C", owgr:92,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Michael Brennan",            country:"USA",  flag:"🇺🇸", odds:"+43000", oddsNum:43000, pool:"C", owgr:95,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sami Välimäki",              country:"FIN",  flag:"🇫🇮", odds:"+52500", oddsNum:52500, pool:"C", owgr:98,  r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Davis Riley",                country:"USA",  flag:"🇺🇸", odds:"+60000", oddsNum:60000, pool:"C", owgr:100, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Charl Schwartzel",           country:"RSA",  flag:"🇿🇦", odds:"+60000", oddsNum:60000, pool:"C", owgr:150, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Bubba Watson",               country:"USA",  flag:"🇺🇸", odds:"+60000", oddsNum:60000, pool:"C", owgr:200, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Zach Johnson",               country:"USA",  flag:"🇺🇸", odds:"+60000", oddsNum:60000, pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Brian Campbell",             country:"USA",  flag:"🇺🇸", odds:"+250000",oddsNum:250000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Ethan Fang (a)",             country:"USA",  flag:"🇺🇸", odds:"+250000",oddsNum:250000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Danny Willett",              country:"ENG",  flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds:"+250000",oddsNum:250000,pool:"C", owgr:160, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Pongsapak Laopakdee (a)",    country:"THA",  flag:"🇹🇭", odds:"+400000",oddsNum:400000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Vijay Singh",                country:"FIJ",  flag:"🇫🇯", odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Mason Howell (a)",           country:"USA",  flag:"🇺🇸", odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Mateo Pulcini (a)",          country:"ARG",  flag:"🇦🇷", odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jackson Herrington (a)",     country:"USA",  flag:"🇺🇸", odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Angel Cabrera",              country:"ARG",  flag:"🇦🇷", odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Naoyuki Kataoka (a)",        country:"JPN",  flag:"🇯🇵", odds:"+450000",oddsNum:450000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Brandon Holtz (a)",          country:"USA",  flag:"🇺🇸", odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Mike Weir",                  country:"CAN",  flag:"🇨🇦", odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Fred Couples",               country:"USA",  flag:"🇺🇸", odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jose Maria Olazabal",        country:"ESP",  flag:"🇪🇸", odds:"+500000",oddsNum:500000,pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
 ];
 
 // Deduplicate
@@ -1011,20 +1030,29 @@ function renderField() {
   applyScoresToField();
   const search = (document.getElementById('fieldSearch')||{}).value?.toLowerCase() || '';
   const filter = (document.getElementById('fieldFilter')||{}).value || 'all';
+  const countryFilter = (document.getElementById('countryFilter')||{}).value || 'all';
   const tbody = document.getElementById('fieldBody');
+
+  const knownCountries = ['USA','ENG','AUS','NIR','SCO','IRL','ESP','JPN','KOR','SWE','NOR','DEN','CAN','RSA'];
+
   let rows = fieldData.filter(g => {
-    const matchSearch = !search || g.name.toLowerCase().includes(search);
-    const matchFilter = filter === 'all' || g.pool === filter;
-    return matchSearch && matchFilter;
+    const matchSearch = !search || g.name.toLowerCase().includes(search) || (g.country||'').toLowerCase().includes(search);
+    const matchPool = filter === 'all' || g.pool === filter;
+    const matchCountry = countryFilter === 'all' ||
+      (countryFilter === 'Other' ? !knownCountries.includes(g.country) : g.country === countryFilter);
+    return matchSearch && matchPool && matchCountry;
   }).sort((a,b) => a.oddsNum - b.oddsNum);
 
   tbody.innerHTML = rows.map((g,i) => {
     const badgeCls = g.pool === 'A' ? 'badge-a' : g.pool === 'B' ? 'badge-b' : 'badge-c';
     const rd = (r) => r !== null && r !== undefined ? `<span class="${r<0?'score-under':r>0?'score-over':'score-even'}">${r>0?'+':''}${r}</span>` : '<span class="score-dash">—</span>';
     const statusBadge = g.status === 'cut' ? '<span class="badge badge-cut" style="font-size:10px;">CUT</span>' : g.status === 'wd' ? '<span class="badge badge-cut" style="font-size:10px;">WD</span>' : '';
+    const flag = g.flag || '🏳';
+    const country = g.country || '—';
     return `<tr>
       <td style="color:var(--gray);font-size:13px;">${i+1}</td>
       <td><strong>${g.name}</strong> ${statusBadge}</td>
+      <td style="white-space:nowrap;"><span style="font-size:18px;vertical-align:middle;">${flag}</span> <span style="font-size:12px;color:var(--gray);vertical-align:middle;">${country}</span></td>
       <td style="font-weight:700;color:var(--gold-light);">${g.odds}</td>
       <td><span class="badge ${badgeCls}">${g.pool}</span></td>
       <td style="color:var(--gray);">${g.owgr <= 200 ? g.owgr : '—'}</td>
@@ -1748,13 +1776,15 @@ function exportEntries() {
 
 function exportField() {
   applyScoresToField();
-  const headers = ['Rank','Golfer','Odds','Pool','OWGR','Status','R1','R2','R3','R4','Total'];
+  const headers = ['Rank','Golfer','Country','Flag','Odds','Pool','OWGR','Status','R1','R2','R3','R4','Total'];
   const sorted = [...fieldData].sort((a,b) => a.oddsNum - b.oddsNum);
   const rows = sorted.map((g, i) => {
     const total = getGolferScore(g);
     return [
       i + 1,
       g.name,
+      g.country || '',
+      g.flag || '',
       g.odds,
       'Pool ' + g.pool,
       g.owgr <= 200 ? g.owgr : 'N/A',
@@ -1837,6 +1867,19 @@ function renderStats() {
     return {...e, total};
   }).sort((a,b)=>a.total-b.total);
 
+  // ---- Country breakdown of picks ----
+  const countryCounts = {};
+  const countryFlags = {};
+  allPicks.forEach(name => {
+    const g = fieldData.find(f => f.name === name);
+    if (g && g.country) {
+      countryCounts[g.country] = (countryCounts[g.country] || 0) + 1;
+      countryFlags[g.country] = g.flag || '🏳';
+    }
+  });
+  const sortedCountries = Object.entries(countryCounts).sort((a,b) => b[1]-a[1]);
+  const topCountry = sortedCountries[0];
+
   // ---- Diversity score: how many unique golfers across all entries ----
   const uniqueGolfers = Object.keys(pickCount).length;
   const fieldSize = fieldData.length;
@@ -1861,9 +1904,10 @@ function renderStats() {
   const barRow = (name, count, max, fillClass, showOdds) => {
     const g = fieldData.find(f=>f.name===name);
     const oddsStr = g ? ` <span style="color:var(--gray);font-size:11px;">${g.odds}</span>` : '';
+    const flagStr = g && g.flag ? `<span style="font-size:13px;vertical-align:middle;margin-right:3px;">${g.flag}</span>` : '';
     return `<div class="bar-row">
       <div class="bar-label">
-        <span class="bar-name">${name}${showOdds ? oddsStr : ''}</span>
+        <span class="bar-name">${flagStr}${name}${showOdds ? oddsStr : ''}</span>
         <span class="bar-val">${count} (${pct(count)}%)</span>
       </div>
       <div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${Math.round(count/max*100)}%"></div></div>
@@ -1888,6 +1932,11 @@ function renderStats() {
   if(uniquePlayers > 1 && totalEntries > uniquePlayers) {
     const doubleDown = totalEntries - uniquePlayers;
     insights.push(`<strong>${doubleDown} player${doubleDown>1?'s':''}</strong> submitted 2 entries to maximize their chances.`);
+  }
+  if(topCountry) {
+    const totalCountryPicks = allPicks.length;
+    const topCountryPct = Math.round(topCountry[1] / totalCountryPicks * 100);
+    insights.push(`${countryFlags[topCountry[0]] || ''} <strong>${topCountry[0]}</strong> players are the most popular picks, accounting for <strong>${topCountryPct}%</strong> of all selections across the pool.`);
   }
   if(entryPopScore.length > 0 && entryContrarianScore.length > 0 && entryPopScore[0].name !== entryContrarianScore[0].name) {
     insights.push(`<strong>${entryPopScore[0].name}</strong> has the most consensus-heavy entry (fewest unique picks), while <strong>${entryContrarianScore[0].name}</strong> is the biggest contrarian.`);
@@ -1973,6 +2022,31 @@ function renderStats() {
         <div class="stats-card-title"><span class="icon">🇨</span> Pool C — Long Shot Picks</div>
         ${topC.length === 0 ? '<p style="color:var(--gray);font-size:13px;">No data yet.</p>' :
           topC.map(([name,cnt]) => barRow(name, cnt, topC[0][1], 'bar-fill-blue', true)).join('')}
+      </div>
+
+      <!-- Country Breakdown -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🌍</span> Picks by Country</div>
+        ${sortedCountries.length === 0 ? '<p style="color:var(--gray);font-size:13px;">No data yet.</p>' :
+          sortedCountries.map(([country, cnt]) => {
+            const flag = countryFlags[country] || '🏳';
+            const totalPicks = allPicks.length;
+            const pctOfPicks = Math.round(cnt / totalPicks * 100);
+            return `<div class="bar-row">
+              <div class="bar-label">
+                <span class="bar-name"><span style="font-size:16px;vertical-align:middle;margin-right:5px;">${flag}</span>${country}</span>
+                <span class="bar-val">${cnt} picks (${pctOfPicks}%)</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill bar-fill-gold" style="width:${Math.round(cnt/sortedCountries[0][1]*100)}%"></div></div>
+            </div>`;
+          }).join('')
+        }
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;">
+          ${sortedCountries.map(([country, cnt]) => {
+            const flag = countryFlags[country] || '🏳';
+            return `<span style="font-size:13px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;" title="${country}: ${cnt} picks">${flag} <strong style="color:var(--gold);">${cnt}</strong></span>`;
+          }).join('')}
+        </div>
       </div>
 
       <!-- Field Diversity -->
