@@ -262,7 +262,40 @@
   .modal-close { background: none; border: none; color: var(--gray); font-size: 22px; cursor: pointer; }
   .modal-close:hover { color: var(--cream); }
 
-  /* ===== SUCCESS MODAL ===== */
+  /* ===== SHEET STATUS ===== */
+  .sheet-status-bar {
+    display: none; align-items: center; gap: 10px; padding: 10px 16px;
+    border-radius: 6px; margin-bottom: 16px; font-size: 13px; font-weight: 600;
+  }
+  .sheet-status-bar.error {
+    display: flex; background: rgba(192,57,43,0.15); border: 1px solid var(--red); color: #fca5a5;
+  }
+  .sheet-status-bar.success {
+    display: flex; background: rgba(45,106,79,0.2); border: 1px solid #40916c; color: #6ee7a7;
+  }
+  .sheet-retry-btn {
+    margin-left: auto; background: var(--red); color: white; border: none;
+    border-radius: 4px; padding: 4px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Source Sans 3', sans-serif; letter-spacing: 0.5px;
+  }
+  .sheet-retry-btn:hover { background: #e74c3c; }
+
+  /* Success modal sheet status */
+  .sheet-confirm {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; font-weight: 600; margin-top: 14px;
+    transition: all 0.3s;
+  }
+  .sheet-confirm.pending { background: rgba(201,168,76,0.1); border: 1px solid var(--gold); color: var(--gold); }
+  .sheet-confirm.ok      { background: rgba(45,106,79,0.2); border: 1px solid #40916c; color: #6ee7a7; }
+  .sheet-confirm.fail    { background: rgba(192,57,43,0.15); border: 1px solid var(--red); color: #fca5a5; }
+  .sheet-confirm-spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Paid sync pulse on leaderboard */
+  .paid-syncing { opacity: 0.5; transition: opacity 0.3s; }
+  .paid-updated { animation: flashGreen 1s ease; }
+  @keyframes flashGreen { 0%,100%{background:transparent} 50%{background:rgba(74,222,128,0.15)} }
   .success-check { font-size: 60px; text-align: center; margin-bottom: 12px; animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275); }
   @keyframes popIn { 0%{transform:scale(0);opacity:0} 100%{transform:scale(1);opacity:1} }
   .success-title { font-family: 'Playfair Display'; font-size: 24px; color: var(--gold); text-align: center; margin-bottom: 8px; }
@@ -427,6 +460,7 @@
       </div>
     </div>
 
+    <div id="sheetStatusBar" class="sheet-status-bar"></div>
     <div id="leaderboardContent">
       <div class="no-entries">
         <div class="icon">⛳</div>
@@ -814,6 +848,11 @@
       <div class="venmo-skip">Opens Venmo in a new tab</div>
     </div>
 
+    <div id="sheetConfirmStatus" class="sheet-confirm pending">
+      <span class="sheet-confirm-spin">⏳</span>
+      <span>Entry submitting…</span>
+    </div>
+
     <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
       <button class="btn btn-gold" style="width:100%;max-width:300px;" onclick="closeSuccessGoHome()">
         ✅ Got it — Take me Home
@@ -943,18 +982,25 @@ let pendingEntry = null;
 let adminUnlocked = false;
 let sheetSynced = false; // tracks whether we've successfully loaded from sheet
 
+// ===== SHEET STATUS BAR =====
+function setSheetStatusBar(ok, errorMsg) {
+  const bar = document.getElementById('sheetStatusBar');
+  if (!bar) return;
+  if (ok) {
+    bar.className = 'sheet-status-bar'; // hidden
+    bar.innerHTML = '';
+  } else {
+    bar.className = 'sheet-status-bar error';
+    bar.innerHTML = `
+      <span>⚠️ ${errorMsg || 'Could not connect to Google Sheets — showing cached data.'}</span>
+      <button class="sheet-retry-btn" onclick="fetchEntriesFromSheet()">↻ Retry</button>`;
+  }
+}
+
 // ===== FETCH ENTRIES FROM GOOGLE SHEET =====
 async function fetchEntriesFromSheet() {
-  // Show loading state on leaderboard
-  const container = document.getElementById('leaderboardContent');
-  if (container) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;color:var(--gray);">
-        <div style="font-size:40px;margin-bottom:14px;animation:pulse 1.4s infinite;">⛳</div>
-        <div style="font-size:15px;color:rgba(245,240,232,0.6);margin-bottom:6px;">Loading entries from the sheet…</div>
-        <div style="font-size:12px;color:var(--gray);">Syncing with Google Sheets</div>
-      </div>`;
-  }
+  const badge = document.getElementById('syncBadge');
+  if (badge) { badge.textContent = '⏳ Syncing…'; badge.style.color = 'var(--gold)'; }
 
   try {
     const res = await fetch(SCRIPT_URL, { method: 'GET', cache: 'no-store' });
@@ -962,16 +1008,22 @@ async function fetchEntriesFromSheet() {
     const json = await res.json();
 
     if (json.result === 'success' && Array.isArray(json.entries)) {
-      // Sheet is the source of truth — overwrite local entries, preserving paid status from sheet
+      // Detect paid status changes from sheet before overwriting
+      const paidChanges = detectPaidChanges(entries, json.entries);
+
+      // Sheet is the source of truth — overwrite local entries
       entries = json.entries;
       localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
       sheetSynced = true;
 
-      // Update sync badge if visible
-      const badge = document.getElementById('syncBadge');
-      if (badge) {
-        badge.textContent = '✅ Synced with sheet';
-        badge.style.color = '#4ade80';
+      if (badge) { badge.textContent = '✅ Synced with sheet'; badge.style.color = '#4ade80'; }
+      setSheetStatusBar(true, null);
+
+      // Flash leaderboard rows that had paid status updated externally
+      renderLeaderboard();
+      if (paidChanges.length > 0) {
+        flashPaidUpdates(paidChanges);
+        showToast(`💳 ${paidChanges.length} payment${paidChanges.length > 1 ? 's' : ''} updated from sheet`);
       }
     } else {
       throw new Error(json.error || 'Unexpected response');
@@ -979,16 +1031,70 @@ async function fetchEntriesFromSheet() {
   } catch (err) {
     console.warn('Sheet fetch failed, using localStorage:', err);
     sheetSynced = false;
-    // Fall back to whatever is cached locally — already in `entries`
-    const badge = document.getElementById('syncBadge');
-    if (badge) {
-      badge.textContent = '⚠️ Using cached data';
-      badge.style.color = '#f59e0b';
-    }
+    if (badge) { badge.textContent = '⚠️ Using cached data'; badge.style.color = '#f59e0b'; }
+    setSheetStatusBar(false, 'Could not connect to Google Sheets — showing cached data.');
+    renderLeaderboard();
   }
+}
 
-  // Re-render everything now that entries are loaded
-  renderLeaderboard();
+// Detect which entries had their paid status changed in the sheet vs local
+function detectPaidChanges(localEntries, sheetEntries) {
+  const changes = [];
+  sheetEntries.forEach(sheetEntry => {
+    const local = localEntries.find(e =>
+      e.email.toLowerCase() === sheetEntry.email.toLowerCase() &&
+      e.name === sheetEntry.name
+    );
+    if (local && local.paid !== sheetEntry.paid) {
+      changes.push({ name: sheetEntry.name, newPaid: sheetEntry.paid });
+    }
+  });
+  return changes;
+}
+
+// Briefly highlight leaderboard rows whose paid status was updated from sheet
+function flashPaidUpdates(changes) {
+  changes.forEach(change => {
+    // Find sb-row elements that contain this entrant's name and flash them
+    document.querySelectorAll('.sb-row').forEach(row => {
+      if (row.textContent.includes(change.name)) {
+        row.classList.add('paid-updated');
+        setTimeout(() => row.classList.remove('paid-updated'), 1500);
+      }
+    });
+  });
+}
+
+// Auto-poll sheet for paid updates every 2 minutes
+let paidPollTimer = null;
+function startPaidPolling() {
+  if (paidPollTimer) clearInterval(paidPollTimer);
+  paidPollTimer = setInterval(async () => {
+    // Silent fetch — just check for paid changes, don't show loading spinner
+    try {
+      const res = await fetch(SCRIPT_URL, { method: 'GET', cache: 'no-store' });
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.result === 'success' && Array.isArray(json.entries)) {
+        const paidChanges = detectPaidChanges(entries, json.entries);
+        if (paidChanges.length > 0) {
+          // Update only paid fields, not full overwrite
+          json.entries.forEach(sheetEntry => {
+            const local = entries.find(e =>
+              e.email.toLowerCase() === sheetEntry.email.toLowerCase() &&
+              e.name === sheetEntry.name
+            );
+            if (local) local.paid = sheetEntry.paid;
+          });
+          localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
+          renderLeaderboard();
+          renderAdminPanel();
+          flashPaidUpdates(paidChanges);
+          showToast(`💳 ${paidChanges.length} payment${paidChanges.length > 1 ? 's' : ''} updated from sheet`);
+        }
+      }
+    } catch (_) { /* silent fail for background poll */ }
+  }, 120000); // every 2 minutes
 }
 
 // ===== APPLY SCORES TO FIELD =====
@@ -1176,22 +1282,40 @@ function submitEntry() {
   entries.push(entryData);
   localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
 
-  // 6. Send to Google Sheets (fire and forget)
+  // 6. Show Venmo success modal immediately — sheet status starts as "pending"
+  const handle = VENMO.replace('@','');
+  document.getElementById('successVenmoHandle').textContent = VENMO;
+  document.getElementById('successVenmoBtn').href = `https://venmo.com/${handle}?txn=pay&note=${encodeURIComponent(name + ' - Masters Pool 2026')}&amount=${ENTRY_FEE}`;
+  document.getElementById('successFeeAmount').textContent = `$${ENTRY_FEE}`;
+  document.getElementById('successSubText').textContent = `${nickname}'s picks are locked in! One last step — send your entry fee to secure your spot.`;
+  setSheetConfirmStatus('pending', '⏳', 'Entry submitting…');
+  document.getElementById('successModal').classList.add('open');
+
+  // 7. Send to Google Sheets — no-cors: resolved promise means request left the browser
+  //    Set a 10s timeout fallback so the spinner never hangs indefinitely
+  const sheetTimeout = setTimeout(() => {
+    setSheetConfirmStatus('ok', '✅', 'Entry submitted successfully.');
+    setSheetStatusBar(true, null);
+  }, 10000);
+
   fetch(SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
     cache: 'no-cache',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(entryData)
-  }).catch(err => console.error("Sheet sync error:", err));
-
-  // 7. Show Venmo success modal
-  const handle = VENMO.replace('@','');
-  document.getElementById('successVenmoHandle').textContent = VENMO;
-  document.getElementById('successVenmoBtn').href = `https://venmo.com/${handle}?txn=pay&note=${encodeURIComponent(name + ' - Masters Pool 2026')}&amount=${ENTRY_FEE}`;
-  document.getElementById('successFeeAmount').textContent = `$${ENTRY_FEE}`;
-  document.getElementById('successSubText').textContent = `${nickname}'s picks are locked in! One last step — send your entry fee to secure your spot.`;
-  document.getElementById('successModal').classList.add('open');
+  })
+  .then(() => {
+    clearTimeout(sheetTimeout);
+    setSheetConfirmStatus('ok', '✅', 'Entry submitted successfully.');
+    setSheetStatusBar(true, null);
+  })
+  .catch(err => {
+    clearTimeout(sheetTimeout);
+    console.error("Sheet sync error:", err);
+    setSheetConfirmStatus('fail', '⚠️',
+      'Entry saved locally. Contact the commissioner if you don\'t appear on the leaderboard.');
+  });
 
   // 8. Reset form for next use
   document.getElementById('entryName').value = '';
@@ -1200,6 +1324,14 @@ function submitEntry() {
   document.getElementById('tiebreaker').value = '';
   goStep1();
   renderLeaderboard();
+}
+
+function setSheetConfirmStatus(state, icon, text) {
+  const el = document.getElementById('sheetConfirmStatus');
+  if (!el) return;
+  el.className = 'sheet-confirm ' + state;
+  const spinClass = state === 'pending' ? ' class="sheet-confirm-spin"' : '';
+  el.innerHTML = `<span${spinClass}>${icon}</span><span>${text}</span>`;
 }
 
 function closeSuccessGoHome() {
@@ -2179,6 +2311,7 @@ populateSelects();
 applyVenmoEverywhere();
 startAutoRefresh();
 fetchEntriesFromSheet(); // Then overwrite with live sheet data
+startPaidPolling();       // Poll every 2 min for paid status changes made in sheet
 </script>
 </body>
 </html>
