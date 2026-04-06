@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Masters Pool 2026 — Augusta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Sans+3:wght@300;400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a3d2b;
+    --green-mid: #2d6a4f;
+    --green-light: #40916c;
+    --gold: #c9a84c;
+    --gold-light: #e8c96d;
+    --cream: #f5f0e8;
+    --white: #ffffff;
+    --dark: #0f1f16;
+    --red: #c0392b;
+    --blue: #2c5282;
+    --gray: #6b7280;
+    --border: rgba(201,168,76,0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--dark);
+    color: var(--cream);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== HEADER ===== */
+  .site-header {
+    background: linear-gradient(180deg, #0a1510 0%, var(--green) 100%);
+    border-bottom: 2px solid var(--gold);
+    text-align: center;
+    padding: 28px 20px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% -30%, rgba(201,168,76,0.12) 0%, transparent 70%);
+  }
+  .header-flag { font-size: 14px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); opacity: 0.85; margin-bottom: 6px; }
+  .header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 6vw, 58px);
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1;
+    position: relative;
+  }
+  .header-title span { color: var(--gold); }
+  .header-year { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold-light); letter-spacing: 6px; margin-top: 4px; }
+  .header-dates { font-size: 13px; color: rgba(245,240,232,0.6); margin-top: 6px; letter-spacing: 1px; }
+  .header-live {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(192,57,43,0.15); border: 1px solid var(--red);
+    border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 700;
+    color: #ff6b6b; margin-top: 12px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .live-dot { width: 7px; height: 7px; background: #ff6b6b; border-radius: 50%; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+  /* ===== NAV ===== */
+  .nav { display: flex; justify-content: center; gap: 4px; padding: 0 12px; background: #111a14; border-bottom: 1px solid rgba(201,168,76,0.2); flex-wrap: wrap; }
+  .nav-btn {
+    background: none; border: none; color: rgba(245,240,232,0.6); font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    padding: 14px 18px; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -1px;
+  }
+  .nav-btn:hover { color: var(--cream); }
+  .nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ===== TABS ===== */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ===== COMMON ===== */
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 16px; }
+  .section-title {
+    font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700;
+    color: var(--gold); margin-bottom: 4px;
+  }
+  .section-sub { font-size: 13px; color: rgba(245,240,232,0.5); margin-bottom: 24px; letter-spacing: 0.5px; }
+  .card {
+    background: rgba(26,61,43,0.45); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px; margin-bottom: 16px;
+  }
+  .btn {
+    display: inline-block; padding: 11px 26px; border-radius: 4px; font-size: 14px;
+    font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+    border: none; transition: all 0.2s; font-family: 'Source Sans 3', sans-serif;
+  }
+  .btn-gold { background: var(--gold); color: var(--dark); }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-outline { background: transparent; border: 2px solid var(--gold); color: var(--gold); }
+  .btn-outline:hover { background: var(--gold); color: var(--dark); }
+  .btn-green { background: var(--green-mid); color: var(--white); }
+  .btn-green:hover { background: var(--green-light); }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .badge-a { background: rgba(201,168,76,0.2); color: var(--gold); border: 1px solid var(--gold); }
+  .badge-b { background: rgba(45,106,79,0.3); color: #6ee7a7; border: 1px solid #40916c; }
+  .badge-c { background: rgba(44,82,130,0.3); color: #93c5fd; border: 1px solid #3b82f6; }
+  .badge-cut { background: rgba(192,57,43,0.2); color: #f87171; border: 1px solid var(--red); }
+  .badge-made { background: rgba(45,106,79,0.3); color: #6ee7a7; border: 1px solid #40916c; }
+
+  input, select, textarea {
+    background: rgba(0,0,0,0.35); border: 1px solid var(--border); color: var(--cream);
+    border-radius: 4px; padding: 10px 14px; font-size: 14px; font-family: 'Source Sans 3', sans-serif;
+    width: 100%; outline: none; transition: border 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+  select option { background: #1a3d2b; }
+  label { font-size: 13px; color: rgba(245,240,232,0.7); display: block; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-group { margin-bottom: 18px; }
+
+  /* ===== SCOREBOARD ===== */
+  .scoreboard-header {
+    display: grid; gap: 10px; padding: 8px 12px; font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; color: rgba(245,240,232,0.4);
+    border-bottom: 1px solid var(--border);
+  }
+  .sb-grid-entry { grid-template-columns: 44px 1fr 80px 80px 80px 80px 70px; }
+  .sb-grid-golfer { grid-template-columns: 44px 1fr 80px 60px 60px 60px 60px 60px; }
+
+  .sb-row {
+    display: grid; gap: 10px; padding: 12px;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+    transition: background 0.15s; cursor: default; align-items: center;
+  }
+  .sb-row:hover { background: rgba(201,168,76,0.05); }
+  .sb-row.leader { background: rgba(201,168,76,0.08); }
+
+  .pos-cell { font-family: 'Bebas Neue'; font-size: 20px; color: var(--gold-light); text-align: center; }
+  .pos-cell.top3 { color: var(--gold); }
+  .move-cell { font-size: 12px; text-align: center; }
+  .move-up { color: #4ade80; }
+  .move-dn { color: #f87171; }
+  .move-even { color: var(--gray); }
+  .name-cell { font-size: 15px; font-weight: 600; }
+  .entry-name { font-size: 15px; font-weight: 700; }
+  .entry-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .score-cell { text-align: center; font-size: 15px; font-weight: 700; }
+  .score-under { color: #4ade80; }
+  .score-over { color: #f87171; }
+  .score-even { color: var(--cream); }
+  .score-dash { color: var(--gray); }
+
+  .golfer-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .golfer-chip {
+    font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 600;
+    background: rgba(26,61,43,0.8); border: 1px solid rgba(201,168,76,0.2); color: rgba(245,240,232,0.7);
+    white-space: nowrap;
+  }
+  .golfer-chip.active { border-color: var(--gold); color: var(--cream); }
+  .golfer-chip.counting { background: rgba(45,106,79,0.4); border-color: #40916c; color: #6ee7a7; }
+  .golfer-chip.cut { color: var(--gray); text-decoration: line-through; opacity: 0.5; }
+
+  /* ===== ENTRY FORM ===== */
+  .pool-rules-box {
+    background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(26,61,43,0.3) 100%);
+    border: 1px solid var(--gold); border-radius: 8px; padding: 20px; margin-bottom: 28px;
+  }
+  .rules-title { font-family: 'Playfair Display'; font-size: 20px; color: var(--gold); margin-bottom: 14px; }
+  .rules-list { list-style: none; display: grid; gap: 10px; }
+  .rules-list li { display: flex; gap: 10px; font-size: 14px; color: rgba(245,240,232,0.85); line-height: 1.5; }
+  .rule-icon { color: var(--gold); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  .pool-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .pool-group { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .pool-group-title { font-family: 'Playfair Display'; font-size: 17px; margin-bottom: 4px; }
+  .pool-group-title.pool-a { color: var(--gold); }
+  .pool-group-title.pool-b { color: #6ee7a7; }
+  .pool-group-title.pool-c { color: #93c5fd; }
+  .pool-group-sub { font-size: 12px; color: var(--gray); margin-bottom: 14px; }
+  .pick-slot { margin-bottom: 12px; }
+  .pick-slot label { font-size: 11px; margin-bottom: 5px; }
+
+  .venmo-box {
+    background: linear-gradient(135deg, #008aff15, #005fff08);
+    border: 1px solid #3b82f6; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;
+  }
+  .venmo-logo { font-size: 26px; margin-bottom: 8px; }
+  .venmo-text { font-size: 15px; margin-bottom: 14px; color: rgba(245,240,232,0.85); }
+  .venmo-text strong { color: var(--gold); }
+  .venmo-btn {
+    display: inline-block; background: #008aff; color: white; padding: 12px 32px;
+    border-radius: 6px; font-weight: 700; font-size: 15px; text-decoration: none;
+    transition: background 0.2s; letter-spacing: 0.5px;
+  }
+  .venmo-btn:hover { background: #006bd6; }
+
+  /* ===== GOLFER BOARD ===== */
+  .odds-table { width: 100%; border-collapse: collapse; }
+  .odds-table th { padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); border-bottom: 1px solid var(--border); font-weight: 700; }
+  .odds-table td { padding: 11px 12px; font-size: 14px; border-bottom: 1px solid rgba(201,168,76,0.06); vertical-align: middle; }
+  .odds-table tr:hover td { background: rgba(201,168,76,0.04); }
+  .trend-up { color: #4ade80; } .trend-dn { color: #f87171; }
+
+  /* ===== LEADERBOARD LIVE ===== */
+  .masters-board { background: rgba(10,21,16,0.8); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .masters-board-header {
+    background: var(--green); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .masters-board-title { font-family: 'Playfair Display'; font-size: 18px; color: var(--gold); }
+  .refresh-info { font-size: 12px; color: rgba(245,240,232,0.4); }
+
+  /* ===== ADMIN ===== */
+  .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .admin-card { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+  .admin-card h3 { font-family: 'Playfair Display'; color: var(--gold); font-size: 18px; margin-bottom: 14px; }
+  .entry-admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(201,168,76,0.08); font-size: 14px; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 3px; }
+  .btn-red { background: var(--red); color: white; }
+  .btn-red:hover { background: #e74c3c; }
+
+  /* ===== INSTRUCTIONS ===== */
+  .instructions-body { line-height: 1.8; font-size: 15px; color: rgba(245,240,232,0.85); }
+  .instructions-body h3 { font-family: 'Playfair Display'; font-size: 20px; color: var(--gold); margin: 22px 0 10px; }
+  .instructions-body p { margin-bottom: 12px; }
+  .instructions-body ul { padding-left: 20px; margin-bottom: 12px; }
+  .instructions-body li { margin-bottom: 6px; }
+  .pool-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  .pool-summary-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 16px; text-align: center; border: 1px solid var(--border); }
+  .pool-summary-item .pool-letter { font-family: 'Bebas Neue'; font-size: 36px; line-height: 1; }
+  .pool-summary-item.pA .pool-letter { color: var(--gold); }
+  .pool-summary-item.pB .pool-letter { color: #6ee7a7; }
+  .pool-summary-item.pC .pool-letter { color: #93c5fd; }
+  .pool-summary-item p { font-size: 12px; color: var(--gray); margin-top: 4px; }
+
+  /* ===== TOAST ===== */
+  #toast {
+    position: fixed; bottom: 30px; right: 24px; background: var(--green);
+    border: 1px solid var(--gold); color: var(--cream); padding: 14px 22px;
+    border-radius: 6px; font-size: 14px; font-weight: 600; z-index: 9999;
+    opacity: 0; transform: translateY(20px); transition: all 0.3s; pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: #111f17; border: 1px solid var(--gold); border-radius: 10px;
+    padding: 28px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto;
+    transform: scale(0.95); transition: transform 0.25s;
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-title { font-family: 'Playfair Display'; font-size: 22px; color: var(--gold); }
+  .modal-close { background: none; border: none; color: var(--gray); font-size: 22px; cursor: pointer; }
+  .modal-close:hover { color: var(--cream); }
+
+  /* ===== SUCCESS MODAL ===== */
+  .success-check { font-size: 60px; text-align: center; margin-bottom: 12px; animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275); }
+  @keyframes popIn { 0%{transform:scale(0);opacity:0} 100%{transform:scale(1);opacity:1} }
+  .success-title { font-family: 'Playfair Display'; font-size: 24px; color: var(--gold); text-align: center; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: rgba(245,240,232,0.65); text-align: center; margin-bottom: 24px; }
+  .venmo-cta {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, rgba(0,138,255,0.1), rgba(0,95,255,0.05));
+    border: 1px solid #3b82f6; border-radius: 10px; padding: 22px; margin-bottom: 20px;
+  }
+  .venmo-cta-label { font-size: 13px; color: rgba(245,240,232,0.65); text-align: center; }
+  .venmo-cta-amount { font-family: 'Bebas Neue'; font-size: 42px; color: #60a5fa; line-height: 1; }
+  .venmo-cta-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #008aff; color: white; padding: 14px 32px;
+    border-radius: 8px; font-weight: 700; font-size: 16px; text-decoration: none;
+    transition: all 0.2s; letter-spacing: 0.5px; border: none; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,138,255,0.3);
+  }
+  .venmo-cta-btn:hover { background: #006bd6; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,138,255,0.4); }
+  .venmo-cta-btn .venmo-icon { font-size: 22px; }
+  .venmo-skip { font-size: 12px; color: var(--gray); text-align: center; margin-top: 4px; }
+
+  /* ===== ESPN API STATUS ===== */
+  .espn-badge {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
+    border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .espn-live { background: rgba(74,222,128,0.15); border: 1px solid #4ade80; color: #4ade80; }
+  .espn-error { background: rgba(248,113,113,0.15); border: 1px solid #f87171; color: #f87171; }
+  .espn-loading { background: rgba(201,168,76,0.15); border: 1px solid var(--gold); color: var(--gold); }
+  .espn-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.4s infinite; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 700px) {
+    .sb-grid-entry { grid-template-columns: 36px 1fr 65px 65px 65px; }
+    .sb-grid-golfer { grid-template-columns: 36px 1fr 60px 60px 60px 60px; }
+    .pool-summary { grid-template-columns: 1fr; }
+    .pool-picker { grid-template-columns: 1fr; }
+    .admin-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== STATS STRIP ===== */
+  .stats-strip {
+    display: flex; gap: 20px; flex-wrap: wrap; padding: 14px 0; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-item { text-align: center; min-width: 80px; }
+  .stat-num { font-family: 'Bebas Neue'; font-size: 30px; color: var(--gold); line-height: 1; }
+  .stat-lbl { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .no-entries { text-align: center; padding: 60px 20px; color: var(--gray); }
+  .no-entries .icon { font-size: 48px; margin-bottom: 14px; }
+  .no-entries p { font-size: 15px; }
+
+  .tiebreaker-note { font-size: 12px; color: var(--gray); margin-top: 6px; }
+  .pick-error { border-color: var(--red) !important; box-shadow: 0 0 0 2px rgba(192,57,43,0.25); }
+  .dup-warning {
+    display: none; background: rgba(192,57,43,0.12); border: 1px solid var(--red);
+    border-radius: 5px; padding: 9px 13px; margin-top: 10px; font-size: 13px;
+    color: #fca5a5; align-items: center; gap: 8px;
+  }
+  .dup-warning.show { display: flex; }
+  /* ===== STATS PAGE ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; margin-bottom: 24px; }
+  .stats-card { background: rgba(10,21,16,0.7); border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+  .stats-card-title { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .stats-card-title .icon { font-size: 20px; }
+
+  /* Bar chart rows */
+  .bar-row { margin-bottom: 11px; }
+  .bar-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .bar-name { font-size: 13px; color: var(--cream); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 68%; }
+  .bar-val { font-size: 13px; color: var(--gold); font-weight: 700; }
+  .bar-track { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+  .bar-fill-gold { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .bar-fill-green { background: linear-gradient(90deg, #2d6a4f, #52b788); }
+  .bar-fill-blue { background: linear-gradient(90deg, #2c5282, #63b3ed); }
+  .bar-fill-red { background: linear-gradient(90deg, #7f1d1d, #f87171); }
+  .bar-fill-purple { background: linear-gradient(90deg, #4c1d95, #a78bfa); }
+
+  /* Fact cards */
+  .fact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .fact-card {
+    background: rgba(10,21,16,0.7); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 14px; text-align: center;
+  }
+  .fact-icon { font-size: 28px; margin-bottom: 8px; }
+  .fact-num { font-family: 'Bebas Neue'; font-size: 38px; color: var(--gold); line-height: 1; }
+  .fact-label { font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; line-height: 1.4; }
+
+  /* Consensus meter */
+  .consensus-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .consensus-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--green-mid); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; border: 1px solid var(--border); }
+  .consensus-info { flex: 1; min-width: 0; }
+  .consensus-name { font-size: 13px; font-weight: 600; color: var(--cream); }
+  .consensus-sub { font-size: 11px; color: var(--gray); }
+  .consensus-pct { font-size: 14px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+
+  /* Pool donut / pie text sim */
+  .pool-dist { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pool-dist-item { flex: 1; min-width: 80px; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px 8px; text-align: center; border: 1px solid var(--border); }
+  .pool-dist-num { font-family: 'Bebas Neue'; font-size: 32px; line-height: 1; }
+  .pool-dist-label { font-size: 11px; color: var(--gray); margin-top: 3px; }
+
+  /* Tiebreaker chart */
+  .tb-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin-top: 10px; }
+  .tb-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tb-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.6s ease; }
+  .tb-bar-label { font-size: 9px; color: var(--gray); text-align: center; }
+
+  /* Heatmap */
+  .heatmap-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+  .heatmap-name { width: 130px; color: var(--cream); font-weight: 600; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .heatmap-cell { flex: 1; height: 22px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.7); }
+  .heatmap-count { width: 28px; text-align: right; color: var(--gold); font-weight: 700; font-size: 12px; flex-shrink: 0; }
+
+  /* Insight callout */
+  .insight-box { background: linear-gradient(135deg, rgba(201,168,76,0.08), rgba(45,106,79,0.12)); border: 1px solid rgba(201,168,76,0.25); border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; font-size: 14px; color: rgba(245,240,232,0.9); line-height: 1.6; }
+  .insight-box strong { color: var(--gold); }
+
+  .stats-empty { text-align: center; padding: 80px 20px; color: var(--gray); }
+  .stats-empty .icon { font-size: 56px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-flag">⛳ Augusta National Golf Club</div>
+  <div class="header-title">The Masters <span>Pool</span></div>
+  <div class="header-year">2026</div>
+  <div class="header-dates">April 9–12, 2026 &nbsp;·&nbsp; Entry Fee: $25/entry &nbsp;·&nbsp; Max 2 entries</div>
+  <div class="header-live" id="liveIndicator"><span class="live-dot"></span> Pre-Tournament</div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showTab('leaderboard')">🏆 Pool Leaderboard</button>
+  <button class="nav-btn" onclick="showTab('enter')">✏️ Enter Pool</button>
+  <button class="nav-btn" onclick="showTab('field')">🎯 Field & Odds</button>
+  <button class="nav-btn" onclick="showTab('live')">📊 Live Scores</button>
+  <button class="nav-btn" onclick="showTab('stats')">📈 Stats</button>
+  <button class="nav-btn" onclick="showTab('rules')">📋 Rules</button>
+  <button class="nav-btn" onclick="showTab('admin')">🔐 Admin</button>
+</nav>
+
+<!-- ===== LEADERBOARD TAB ===== -->
+<div id="tab-leaderboard" class="tab-content active">
+  <div class="container">
+    <div class="section-title">Pool Leaderboard</div>
+    <div class="section-sub" id="lbSubtitle">Pre-tournament — entries open. Tournament begins April 9.</div>
+
+    <div class="stats-strip" id="statsStrip">
+      <div class="stat-item"><div class="stat-num" id="statEntries">0</div><div class="stat-lbl">Entries</div></div>
+      <div class="stat-item"><div class="stat-num" id="statPlayers">0</div><div class="stat-lbl">Players</div></div>
+      <div class="stat-item"><div class="stat-num" id="statPrize">$0</div><div class="stat-lbl">Prize Pool</div></div>
+      <div class="stat-item"><div class="stat-num" id="statRound">Pre</div><div class="stat-lbl">Round</div></div>
+      <div class="stat-item" style="margin-left:auto;">
+        <div style="font-size:11px;" id="syncBadge">⏳ Loading sheet…</div>
+        <button onclick="fetchEntriesFromSheet()" style="margin-top:4px;background:none;border:1px solid var(--border);color:var(--gray);border-radius:3px;padding:3px 8px;font-size:10px;cursor:pointer;letter-spacing:0.5px;text-transform:uppercase;" title="Refresh from Google Sheet">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div id="leaderboardContent">
+      <div class="no-entries">
+        <div class="icon">⛳</div>
+        <p>No entries yet. Be the first to enter the pool!</p>
+        <br>
+        <button class="btn btn-gold" onclick="showTab('enter')">Enter the Pool</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ENTRY TAB ===== -->
+<div id="tab-enter" class="tab-content">
+  <div class="container">
+    <div class="section-title">Submit Your Entry</div>
+    <div class="section-sub">Pick 8 golfers across 3 pools · $25 per entry · Max 2 entries</div>
+
+    <div class="pool-rules-box">
+      <div class="rules-title">📋 Quick Rules</div>
+      <ul class="rules-list">
+        <li><span class="rule-icon">🅰</span> <span><strong>Pool A (2 picks):</strong> Favorites — odds 30/1 or better (e.g. Scheffler +500, Rahm +1000)</span></li>
+        <li><span class="rule-icon">🅱</span> <span><strong>Pool B (4 picks):</strong> Mid-tier — odds between 33/1 and 150/1</span></li>
+        <li><span class="rule-icon">🇨</span> <span><strong>Pool C (2 picks):</strong> Long shots — odds 200/1 or higher</span></li>
+        <li><span class="rule-icon">🏆</span> <span>Best 5 scores count; top 3 scores dropped. Lowest total wins.</span></li>
+        <li><span class="rule-icon">✂️</span> <span>At least 5 of 8 golfers must make the cut or you're eliminated.</span></li>
+        <li><span class="rule-icon">💰</span> <span>$25 entry fee via Venmo to @pinneys before the tournament starts.</span></li>
+      </ul>
+    </div>
+
+    <div id="entryFormContent">
+      <!-- Form step 1: Name & Info -->
+      <div id="step1">
+        <div class="card">
+          <div class="form-group">
+            <label>Your Name</label>
+            <input type="text" id="entryName" placeholder="First & Last Name">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="entryEmail" placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label>Entry Name (optional nickname for scoreboard)</label>
+            <input type="text" id="entryNickname" placeholder="e.g. 'Tiger Wannabe', 'Scheffler's Shadow'">
+          </div>
+          <div class="form-group">
+            <label>Tiebreaker #1 — Final Winning Score (to par)</label>
+            <input type="number" id="tiebreaker" placeholder="e.g. -12" min="-30" max="20">
+            <div class="tiebreaker-note">Guess the winning score relative to par (e.g. enter -12 for twelve under)</div>
+          </div>
+          <button class="btn btn-gold" onclick="goStep2()">Next: Pick Your Golfers →</button>
+        </div>
+      </div>
+
+      <!-- Form step 2: Picks -->
+      <div id="step2" style="display:none;">
+        <div class="pool-picker">
+          <!-- Pool A -->
+          <div class="pool-group">
+            <div class="pool-group-title pool-a">🅰 Pool A — Favorites</div>
+            <div class="pool-group-sub">Pick 2 · Odds 30/1 or better</div>
+            <div class="pick-slot">
+              <label>Pick 1</label>
+              <select id="pickA1" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select>
+            </div>
+            <div class="pick-slot">
+              <label>Pick 2</label>
+              <select id="pickA2" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select>
+            </div>
+          </div>
+          <!-- Pool B -->
+          <div class="pool-group">
+            <div class="pool-group-title pool-b">🅱 Pool B — Mid-Tier</div>
+            <div class="pool-group-sub">Pick 4 · Odds 33/1 to 150/1</div>
+            <div class="pick-slot"><label>Pick 1</label><select id="pickB1" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select></div>
+            <div class="pick-slot"><label>Pick 2</label><select id="pickB2" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select></div>
+            <div class="pick-slot"><label>Pick 3</label><select id="pickB3" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select></div>
+            <div class="pick-slot"><label>Pick 4</label><select id="pickB4" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select></div>
+          </div>
+          <!-- Pool C -->
+          <div class="pool-group">
+            <div class="pool-group-title pool-c">🇨 Pool C — Long Shots</div>
+            <div class="pool-group-sub">Pick 2 · Odds 200/1 or higher</div>
+            <div class="pick-slot"><label>Pick 1</label><select id="pickC1" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select></div>
+            <div class="pick-slot"><label>Pick 2</label><select id="pickC2" onchange="checkDuplicates()"><option value="">— Select Golfer —</option></select></div>
+          </div>
+        </div>
+        <div id="dupWarning" class="dup-warning">
+          <span style="font-size:18px;">⚠️</span>
+          <span id="dupWarningText">You have selected the same golfer more than once. Each pick must be unique.</span>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;">
+          <button class="btn btn-outline" onclick="goStep1()">← Back</button>
+          <button class="btn btn-gold" onclick="submitEntry()">Submit Entry & Pay →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Venmo Payment -->
+    <div class="venmo-box">
+      <div class="venmo-logo">💳</div>
+      <div class="venmo-text">After submitting, send <strong>$25 per entry</strong> to <span class="venmo-handle">@pinneys</span> on Venmo.<br>Include your name in the payment note.</div>
+      <a href="https://venmo.com/pinneys" target="_blank" class="venmo-btn">Pay <span class="venmo-handle">@pinneys</span> on Venmo</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FIELD TAB ===== -->
+<div id="tab-field" class="tab-content">
+  <div class="container">
+    <div class="section-title">2026 Masters Field & Odds</div>
+    <div class="section-sub">Current Vegas consensus odds — auto-categorized by pool tier</div>
+
+    <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="fieldSearch" placeholder="Search golfer..." style="max-width:220px;" oninput="filterField()">
+      <select id="fieldFilter" style="max-width:160px;" onchange="filterField()">
+        <option value="all">All Pools</option>
+        <option value="A">Pool A (Favorites)</option>
+        <option value="B">Pool B (Mid-Tier)</option>
+        <option value="C">Pool C (Long Shots)</option>
+      </select>
+    </div>
+
+    <div class="masters-board">
+      <div class="masters-board-header">
+        <span class="masters-board-title">Complete Field</span>
+        <span class="refresh-info" id="oddsUpdated">Odds as of April 5, 2026</span>
+      </div>
+      <table class="odds-table" id="fieldTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Golfer</th>
+            <th>Odds</th>
+            <th>Pool</th>
+            <th>OWGR</th>
+            <th>R1</th><th>R2</th><th>R3</th><th>R4</th><th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="fieldBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LIVE SCORES TAB ===== -->
+<div id="tab-live" class="tab-content">
+  <div class="container">
+    <div class="section-title">Live Masters Leaderboard</div>
+    <div class="section-sub" id="liveSubtitle">Tournament begins April 9 · Scores update automatically</div>
+    <div class="masters-board">
+      <div class="masters-board-header">
+        <span class="masters-board-title">Augusta National — Official Scores</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span id="espnStatus" class="espn-badge espn-loading"><span class="espn-dot"></span> Loading…</span>
+          <span class="refresh-info" id="lastRefresh">Updates every 60s</span>
+        </div>
+      </div>
+      <div id="liveScoreContent">
+        <div style="padding:40px;text-align:center;color:var(--gray);">
+          <div style="font-size:40px;margin-bottom:12px;">⛳</div>
+          <p style="font-size:15px;">Live scores will appear here once the tournament begins on April 9.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STATS TAB ===== -->
+<div id="tab-stats" class="tab-content">
+  <div class="container">
+    <div class="section-title">Pool Statistics</div>
+    <div class="section-sub">Insights & trends across all entries — updated in real time</div>
+    <div id="statsContent"></div>
+  </div>
+</div>
+
+<!-- ===== RULES TAB ===== -->
+<div id="tab-rules" class="tab-content">
+  <div class="container">
+    <div class="section-title">Pool Rules & Instructions</div>
+    <div class="section-sub">Everything you need to know about the 2026 Masters Pool</div>
+    <div class="card instructions-body">
+      <h3>Overview</h3>
+      <p>Welcome to the 2026 Masters Pool! Each participant selects 8 golfers split across three tiers (pools) based on their Vegas odds. Your best 5 scores count — the lowest total wins!</p>
+
+      <h3>Pool Structure</h3>
+      <div class="pool-summary">
+        <div class="pool-summary-item pA">
+          <div class="pool-letter">A</div>
+          <div style="font-size:14px;color:var(--gold);font-weight:700;margin-top:4px;">2 Picks</div>
+          <p>Favorites<br>Odds 30/1 or better</p>
+        </div>
+        <div class="pool-summary-item pB">
+          <div class="pool-letter">B</div>
+          <div style="font-size:14px;color:#6ee7a7;font-weight:700;margin-top:4px;">4 Picks</div>
+          <p>Mid-Tier<br>Odds 33/1 – 150/1</p>
+        </div>
+        <div class="pool-summary-item pC">
+          <div class="pool-letter">C</div>
+          <div style="font-size:14px;color:#93c5fd;font-weight:700;margin-top:4px;">2 Picks</div>
+          <p>Long Shots<br>Odds 200/1 or higher</p>
+        </div>
+      </div>
+
+      <h3>Scoring</h3>
+      <ul>
+        <li>Each golfer's final tournament score (relative to par) counts for your entry.</li>
+        <li>Your <strong>best (lowest) 5 scores count</strong> — the highest 3 scores are dropped.</li>
+        <li>The entry with the <strong>lowest cumulative score</strong> from their top 5 golfers wins.</li>
+        <li>Scores update live during tournament rounds.</li>
+      </ul>
+
+      <h3>Cut Rule</h3>
+      <ul>
+        <li>At least <strong>5 of your 8 golfers must make the cut</strong> to remain in the pool.</li>
+        <li>If fewer than 5 make the cut, your entry is eliminated.</li>
+        <li>Golfers who miss the cut receive a score of +10 (penalty) for pool purposes.</li>
+      </ul>
+
+      <h3>Tiebreakers</h3>
+      <ul>
+        <li><strong>Tiebreaker #1:</strong> Closest guess to the actual winning score (to par) wins. Example: if the winner shoots -14, the entry closest to -14 wins the tiebreaker.</li>
+        <li><strong>Tiebreaker #2:</strong> In the event of a remaining tie, the average score of your top 5 qualifiers during Sunday's final round determines the winner. (This is automatic — no pick needed.)</li>
+      </ul>
+
+      <h3>Entry & Payment</h3>
+      <ul>
+        <li>Entry fee: <strong>$25 per entry</strong></li>
+        <li>Maximum <strong>2 entries per person</strong></li>
+        <li>Payment via Venmo to <strong><span class="venmo-handle">@pinneys</span></strong> — include your name in the note</li>
+        <li>Entries must be submitted before the first tee shot on Thursday, April 9</li>
+      </ul>
+
+      <h3>Prize Structure</h3>
+      <p>Prize distribution is determined by the commissioner based on total entries. Typical structure:<br>
+      1st Place: 60% · 2nd Place: 25% · 3rd Place: 15%</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN TAB ===== -->
+<div id="tab-admin" class="tab-content">
+  <div class="container">
+    <div class="section-title">Commissioner Admin</div>
+    <div class="section-sub">Manage entries, update scores, and control the pool</div>
+
+    <div id="adminLock" class="card" style="max-width:400px;">
+      <div class="form-group">
+        <label>Admin Password</label>
+        <input type="password" id="adminPwd" placeholder="Enter password">
+      </div>
+      <button class="btn btn-gold" onclick="checkAdmin()">Unlock Admin</button>
+    </div>
+
+    <div id="adminPanel" style="display:none;">
+      <div class="admin-grid">
+
+        <div class="admin-card">
+          <h3>⚙️ Tournament Settings</h3>
+          <div class="form-group">
+            <label>Current Round</label>
+            <select id="adminRound">
+              <option value="0">Pre-Tournament</option>
+              <option value="1">Round 1</option>
+              <option value="2">Round 2</option>
+              <option value="3">Round 3</option>
+              <option value="4">Round 4 (Final)</option>
+              <option value="5">Complete</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tournament Status</label>
+            <select id="adminStatus">
+              <option value="pre">Pre-Tournament</option>
+              <option value="active">In Progress</option>
+              <option value="cut">After Cut</option>
+              <option value="final">Final</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Venmo Payment Username</label>
+            <input type="text" id="adminVenmo" placeholder="@username">
+            <div class="tiebreaker-note">Updates the Venmo link everywhere on the site instantly.</div>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="saveSettings()">Save Settings</button>
+        </div>
+
+        <div class="admin-card">
+          <h3>📊 Update Golfer Scores</h3>
+          <div class="form-group">
+            <label>Select Golfer</label>
+            <select id="adminGolferSelect"><option value="">— Select —</option></select>
+          </div>
+          <div class="form-group">
+            <label>Score to Par (cumulative)</label>
+            <input type="number" id="adminScore" placeholder="e.g. -8">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="adminCutStatus">
+              <option value="active">Active</option>
+              <option value="cut">Missed Cut</option>
+              <option value="wd">Withdrawn</option>
+            </select>
+          </div>
+          <button class="btn btn-green btn-sm" onclick="updateGolferScore()">Update Score</button>
+        </div>
+
+        <div class="admin-card">
+          <h3>✅ Entry Management</h3>
+          <div id="adminEntryList"><p style="color:var(--gray);font-size:14px;">No entries yet.</p></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>🏦 Pool Financials</h3>
+          <div id="adminFinancials"></div>
+          <br>
+          <button class="btn btn-outline btn-sm" onclick="exportEntries()">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="font-family:'Playfair Display';color:var(--gold);font-size:18px;">All Entries</h3>
+          <button class="btn btn-outline btn-sm" onclick="renderAdminEntries()">Refresh</button>
+        </div>
+        <div id="allEntriesAdmin"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENTRY CONFIRM MODAL -->
+<div id="confirmModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🏆 Confirm Entry</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="confirmContent"></div>
+    <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="confirmEntry()">Confirm & Submit</button>
+      <button class="btn btn-outline" onclick="closeModal()">Edit Picks</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS / VENMO MODAL -->
+<div id="successModal" class="modal-overlay">
+  <div class="modal" style="max-width:480px;text-align:center;">
+    <div class="success-check">🏌️</div>
+    <div class="success-title">Entry Submitted!</div>
+    <div class="success-sub" id="successSubText">Your picks are locked in. One last step — send your entry fee to secure your spot.</div>
+
+    <div class="venmo-cta">
+      <div class="venmo-cta-label">Entry fee due</div>
+      <div class="venmo-cta-amount" id="successFeeAmount">$25</div>
+      <div class="venmo-cta-label">Send to <strong style="color:var(--cream);" id="successVenmoHandle">@pinneys</strong> on Venmo — include your name in the note.</div>
+      <a id="successVenmoBtn" href="https://venmo.com/pinneys" target="_blank" class="venmo-cta-btn">
+        <span class="venmo-icon">💸</span> Pay via Venmo
+      </a>
+      <div class="venmo-skip">Opens Venmo in a new tab</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+      <button class="btn btn-gold" style="width:100%;max-width:300px;" onclick="closeSuccessGoHome()">
+        ✅ Got it — Take me Home
+      </button>
+      <button class="btn btn-outline" style="width:100%;max-width:300px;" onclick="closeSuccessGoHome()">
+        I'll pay later — Go to Leaderboard
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===== DATA =====
+const ADMIN_PASSWORD = "masters2026";
+let VENMO = localStorage.getItem('mastersPool2026_venmo') || "@pinneys";
+const ENTRY_FEE = 25;
+
+// 2026 Masters Field with Vegas odds
+const GOLFERS = [
+  // Pool A — 30/1 or better
+  {name:"Scottie Scheffler", odds:"+500", oddsNum:500, pool:"A", owgr:1, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Bryson DeChambeau", odds:"+1000", oddsNum:1000, pool:"A", owgr:4, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jon Rahm", odds:"+1000", oddsNum:1000, pool:"A", owgr:3, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Rory McIlroy", odds:"+1200", oddsNum:1200, pool:"A", owgr:2, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Ludvig Åberg", odds:"+1600", oddsNum:1600, pool:"A", owgr:5, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Xander Schauffele", odds:"+1600", oddsNum:1600, pool:"A", owgr:6, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Tommy Fleetwood", odds:"+2200", oddsNum:2200, pool:"A", owgr:7, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Matt Fitzpatrick", odds:"+2500", oddsNum:2500, pool:"A", owgr:9, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Cameron Young", odds:"+2700", oddsNum:2700, pool:"A", owgr:10, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Collin Morikawa", odds:"+2700", oddsNum:2700, pool:"A", owgr:11, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  // Pool B — 33/1 to 150/1
+  {name:"Justin Rose", odds:"+3000", oddsNum:3000, pool:"B", owgr:13, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Patrick Reed", odds:"+3300", oddsNum:3300, pool:"B", owgr:15, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Collin Morikawa", odds:"+3500", oddsNum:3500, pool:"B", owgr:14, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Chris Gotterup", odds:"+3500", oddsNum:3500, pool:"B", owgr:18, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Hideki Matsuyama", odds:"+4000", oddsNum:4000, pool:"B", owgr:16, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Justin Thomas", odds:"+4000", oddsNum:4000, pool:"B", owgr:22, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sungjae Im", odds:"+8000", oddsNum:8000, pool:"B", owgr:20, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Si Woo Kim", odds:"+6000", oddsNum:6000, pool:"B", owgr:24, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Corey Conners", odds:"+6000", oddsNum:6000, pool:"B", owgr:25, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jason Day", odds:"+6600", oddsNum:6600, pool:"B", owgr:28, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Min Woo Lee", odds:"+6600", oddsNum:6600, pool:"B", owgr:29, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Max Homa", odds:"+6600", oddsNum:6600, pool:"B", owgr:30, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jake Knapp", odds:"+6000", oddsNum:6000, pool:"B", owgr:32, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Daniel Berger", odds:"+7000", oddsNum:7000, pool:"B", owgr:35, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Nicolai Højgaard", odds:"+9000", oddsNum:9000, pool:"B", owgr:38, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Harris English", odds:"+9000", oddsNum:9000, pool:"B", owgr:40, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Rasmus Højgaard", odds:"+10000", oddsNum:10000, pool:"B", owgr:42, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Alex Noren", odds:"+10000", oddsNum:10000, pool:"B", owgr:44, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Matt McCarty", odds:"+10000", oddsNum:10000, pool:"B", owgr:45, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Brooks Koepka", odds:"+3800", oddsNum:3800, pool:"B", owgr:17, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sungjae Im", odds:"+8000", oddsNum:8000, pool:"B", owgr:27, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Sahith Theegala", odds:"+5000", oddsNum:5000, pool:"B", owgr:19, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Akshay Bhatia", odds:"+5500", oddsNum:5500, pool:"B", owgr:21, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Wyndham Clark", odds:"+6000", oddsNum:6000, pool:"B", owgr:23, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Robert MacIntyre", odds:"+7500", oddsNum:7500, pool:"B", owgr:31, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Adam Scott", odds:"+14000", oddsNum:14000, pool:"B", owgr:48, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Tyrrell Hatton", odds:"+7000", oddsNum:7000, pool:"B", owgr:33, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  // Pool C — 200/1 or higher
+  {name:"Ryan Gerard", odds:"+11000", oddsNum:11000, pool:"C", owgr:52, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Johnny Keefer", odds:"+13000", oddsNum:13000, pool:"C", owgr:55, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Aaron Rai", odds:"+13000", oddsNum:13000, pool:"C", owgr:57, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Casey Jarvis", odds:"+9600", oddsNum:9600, pool:"C", owgr:69, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Jacob Bridgeman", odds:"+9400", oddsNum:9400, pool:"C", owgr:65, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Brian Harman", odds:"+15000", oddsNum:15000, pool:"C", owgr:60, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Rasmus Hojgaard", odds:"+15000", oddsNum:15000, pool:"C", owgr:63, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Patrick Cantlay", odds:"+20000", oddsNum:20000, pool:"C", owgr:70, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Ryo Hisatsune", odds:"+20000", oddsNum:20000, pool:"C", owgr:75, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Mason Howell (a)", odds:"+200000", oddsNum:200000, pool:"C", owgr:999, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"Toru Nakajima", odds:"+25000", oddsNum:25000, pool:"C", owgr:80, r1:null,r2:null,r3:null,r4:null,status:"active"},
+  {name:"David Puig", odds:"+30000", oddsNum:30000, pool:"C", owgr:85, r1:null,r2:null,r3:null,r4:null,status:"active"},
+];
+
+// Deduplicate
+const fieldData = [];
+const seen = new Set();
+GOLFERS.forEach(g => { if(!seen.has(g.name)){seen.add(g.name);fieldData.push({...g});}});
+
+let entries = JSON.parse(localStorage.getItem('mastersPool2026_entries') || '[]');
+let settings = JSON.parse(localStorage.getItem('mastersPool2026_settings') || '{"round":0,"status":"pre"}');
+let scores = JSON.parse(localStorage.getItem('mastersPool2026_scores') || '{}');
+let pendingEntry = null;
+let adminUnlocked = false;
+let sheetSynced = false; // tracks whether we've successfully loaded from sheet
+
+// ===== FETCH ENTRIES FROM GOOGLE SHEET =====
+async function fetchEntriesFromSheet() {
+  // Show loading state on leaderboard
+  const container = document.getElementById('leaderboardContent');
+  if (container) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--gray);">
+        <div style="font-size:40px;margin-bottom:14px;animation:pulse 1.4s infinite;">⛳</div>
+        <div style="font-size:15px;color:rgba(245,240,232,0.6);margin-bottom:6px;">Loading entries from the sheet…</div>
+        <div style="font-size:12px;color:var(--gray);">Syncing with Google Sheets</div>
+      </div>`;
+  }
+
+  try {
+    const res = await fetch(SCRIPT_URL, { method: 'GET', cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+
+    if (json.result === 'success' && Array.isArray(json.entries)) {
+      // Sheet is the source of truth — overwrite local entries, preserving paid status from sheet
+      entries = json.entries;
+      localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
+      sheetSynced = true;
+
+      // Update sync badge if visible
+      const badge = document.getElementById('syncBadge');
+      if (badge) {
+        badge.textContent = '✅ Synced with sheet';
+        badge.style.color = '#4ade80';
+      }
+    } else {
+      throw new Error(json.error || 'Unexpected response');
+    }
+  } catch (err) {
+    console.warn('Sheet fetch failed, using localStorage:', err);
+    sheetSynced = false;
+    // Fall back to whatever is cached locally — already in `entries`
+    const badge = document.getElementById('syncBadge');
+    if (badge) {
+      badge.textContent = '⚠️ Using cached data';
+      badge.style.color = '#f59e0b';
+    }
+  }
+
+  // Re-render everything now that entries are loaded
+  renderLeaderboard();
+}
+
+// ===== APPLY SCORES TO FIELD =====
+function applyScoresToField() {
+  fieldData.forEach(g => {
+    if(scores[g.name]) {
+      Object.assign(g, scores[g.name]);
+    }
+  });
+}
+
+// ===== TAB NAVIGATION =====
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(tab === 'leaderboard') { renderLeaderboard(); fetchEntriesFromSheet(); }
+  if(tab === 'field') renderField();
+  if(tab === 'live') { renderLive(); fetchESPN(); }
+  if(tab === 'stats') renderStats();
+  if(tab === 'admin' && adminUnlocked) renderAdminPanel();
+}
+
+// ===== FIELD RENDER =====
+function getGolferScore(g) {
+  const rounds = [g.r1, g.r2, g.r3, g.r4].filter(r => r !== null && r !== undefined);
+  if(rounds.length === 0) return null;
+  return rounds.reduce((a,b) => a+b, 0);
+}
+
+function scoreDisplay(g) {
+  const s = getGolferScore(g);
+  if(s === null) return '<span class="score-dash">—</span>';
+  const cls = s < 0 ? 'score-under' : s > 0 ? 'score-over' : 'score-even';
+  return `<span class="${cls}">${s > 0 ? '+' : ''}${s}</span>`;
+}
+
+function renderField() {
+  applyScoresToField();
+  const search = (document.getElementById('fieldSearch')||{}).value?.toLowerCase() || '';
+  const filter = (document.getElementById('fieldFilter')||{}).value || 'all';
+  const tbody = document.getElementById('fieldBody');
+  let rows = fieldData.filter(g => {
+    const matchSearch = !search || g.name.toLowerCase().includes(search);
+    const matchFilter = filter === 'all' || g.pool === filter;
+    return matchSearch && matchFilter;
+  }).sort((a,b) => a.oddsNum - b.oddsNum);
+
+  tbody.innerHTML = rows.map((g,i) => {
+    const badgeCls = g.pool === 'A' ? 'badge-a' : g.pool === 'B' ? 'badge-b' : 'badge-c';
+    const rd = (r) => r !== null && r !== undefined ? `<span class="${r<0?'score-under':r>0?'score-over':'score-even'}">${r>0?'+':''}${r}</span>` : '<span class="score-dash">—</span>';
+    const statusBadge = g.status === 'cut' ? '<span class="badge badge-cut" style="font-size:10px;">CUT</span>' : g.status === 'wd' ? '<span class="badge badge-cut" style="font-size:10px;">WD</span>' : '';
+    return `<tr>
+      <td style="color:var(--gray);font-size:13px;">${i+1}</td>
+      <td><strong>${g.name}</strong> ${statusBadge}</td>
+      <td style="font-weight:700;color:var(--gold-light);">${g.odds}</td>
+      <td><span class="badge ${badgeCls}">${g.pool}</span></td>
+      <td style="color:var(--gray);">${g.owgr <= 200 ? g.owgr : '—'}</td>
+      <td>${rd(g.r1)}</td><td>${rd(g.r2)}</td><td>${rd(g.r3)}</td><td>${rd(g.r4)}</td>
+      <td>${scoreDisplay(g)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterField() { renderField(); }
+
+// ===== ENTRY FORM =====
+function populateSelects() {
+  const poolA = fieldData.filter(g => g.pool === 'A');
+  const poolB = fieldData.filter(g => g.pool === 'B');
+  const poolC = fieldData.filter(g => g.pool === 'C');
+
+  const mkOpts = (arr) => arr.map(g => `<option value="${g.name}">${g.name} (${g.odds})</option>`).join('');
+
+  ['pickA1','pickA2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="">— Select Golfer —</option>' + mkOpts(poolA);
+  });
+  ['pickB1','pickB2','pickB3','pickB4'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="">— Select Golfer —</option>' + mkOpts(poolB);
+  });
+  ['pickC1','pickC2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="">— Select Golfer —</option>' + mkOpts(poolC);
+  });
+}
+
+function checkDuplicates() {
+  const allIds = ['pickA1','pickA2','pickB1','pickB2','pickB3','pickB4','pickC1','pickC2'];
+  const values = allIds.map(id => document.getElementById(id).value).filter(v => v !== '');
+  const counts = {};
+  values.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+  const dupes = Object.entries(counts).filter(([,c]) => c > 1).map(([name]) => name);
+
+  // Highlight duped selects
+  allIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(el.value && dupes.includes(el.value)) {
+      el.classList.add('pick-error');
+    } else {
+      el.classList.remove('pick-error');
+    }
+  });
+
+  // Show/hide warning banner
+  const warn = document.getElementById('dupWarning');
+  if(dupes.length > 0) {
+    document.getElementById('dupWarningText').textContent =
+      `⚠️ Duplicate pick${dupes.length > 1 ? 's' : ''}: ${dupes.join(', ')}. Each golfer may only be selected once.`;
+    warn.classList.add('show');
+  } else {
+    warn.classList.remove('show');
+  }
+  return dupes.length === 0;
+}
+
+function goStep1() {
+  document.getElementById('step1').style.display = '';
+  document.getElementById('step2').style.display = 'none';
+}
+
+function goStep2() {
+  const name = document.getElementById('entryName').value.trim();
+  const email = document.getElementById('entryEmail').value.trim();
+  const tb = document.getElementById('tiebreaker').value;
+  if(!name) { showToast('Please enter your name.'); return; }
+  if(!email || !email.includes('@')) { showToast('Please enter a valid email.'); return; }
+  if(tb === '') { showToast('Please enter your tiebreaker score.'); return; }
+
+  // Check 2-entry limit
+  const existing = entries.filter(e => e.email.toLowerCase() === email.toLowerCase());
+  if(existing.length >= 2) { showToast('Max 2 entries per person reached for this email.'); return; }
+
+  populateSelects();
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = '';
+}
+
+// The URL for your Google Apps Script Web App
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzbIBMwV3fRCJASPGtK-s75PNG6z3bPdGzA7N50qL4vZX8jRg401RP3H-605bpFr-ih2g/exec";
+
+function submitEntry() {
+  // 1. Check for duplicates before submitting
+  if (!checkDuplicates()) {
+    showToast("Please fix duplicate golfer selections before submitting.");
+    return;
+  }
+
+  // 2. Validate basic required fields
+  const name = document.getElementById('entryName').value.trim();
+  const email = document.getElementById('entryEmail').value.trim();
+  if (!name || !email) {
+    showToast("Name and Email are required.");
+    return;
+  }
+
+  // 3. Validate all picks filled
+  const picks = {
+    A: [document.getElementById('pickA1').value, document.getElementById('pickA2').value],
+    B: [document.getElementById('pickB1').value, document.getElementById('pickB2').value,
+        document.getElementById('pickB3').value, document.getElementById('pickB4').value],
+    C: [document.getElementById('pickC1').value, document.getElementById('pickC2').value]
+  };
+  if (picks.A.some(p => !p)) { showToast('Please select both Pool A golfers.'); return; }
+  if (picks.B.some(p => !p)) { showToast('Please select all 4 Pool B golfers.'); return; }
+  if (picks.C.some(p => !p)) { showToast('Please select both Pool C golfers.'); return; }
+
+  // 4. Gather full entry data
+  const nickname = document.getElementById('entryNickname').value.trim() || name;
+  const tiebreaker = document.getElementById('tiebreaker').value;
+  const entryData = { name, email, nickname, tiebreaker, picks, timestamp: new Date().toISOString(), paid: false };
+
+  // 5. Save locally
+  entries.push(entryData);
+  localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
+
+  // 6. Send to Google Sheets (fire and forget)
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    cache: 'no-cache',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entryData)
+  }).catch(err => console.error("Sheet sync error:", err));
+
+  // 7. Show Venmo success modal
+  const handle = VENMO.replace('@','');
+  document.getElementById('successVenmoHandle').textContent = VENMO;
+  document.getElementById('successVenmoBtn').href = `https://venmo.com/${handle}?txn=pay&note=${encodeURIComponent(name + ' - Masters Pool 2026')}&amount=${ENTRY_FEE}`;
+  document.getElementById('successFeeAmount').textContent = `$${ENTRY_FEE}`;
+  document.getElementById('successSubText').textContent = `${nickname}'s picks are locked in! One last step — send your entry fee to secure your spot.`;
+  document.getElementById('successModal').classList.add('open');
+
+  // 8. Reset form for next use
+  document.getElementById('entryName').value = '';
+  document.getElementById('entryEmail').value = '';
+  document.getElementById('entryNickname').value = '';
+  document.getElementById('tiebreaker').value = '';
+  goStep1();
+  renderLeaderboard();
+}
+
+function closeSuccessGoHome() {
+  document.getElementById('successModal').classList.remove('open');
+  // Navigate to leaderboard tab
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector('.nav-btn').classList.add('active');
+  document.getElementById('tab-leaderboard').classList.add('active');
+  renderLeaderboard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function confirmEntry() {
+  if(!pendingEntry) return;
+  entries.push(pendingEntry);
+  localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
+  closeModal();
+  showToast('✅ Entry submitted! Don\'t forget to pay @pinneys on Venmo.');
+  // Reset form
+  document.getElementById('entryName').value = '';
+  document.getElementById('entryEmail').value = '';
+  document.getElementById('entryNickname').value = '';
+  document.getElementById('tiebreaker').value = '';
+  goStep1();
+  pendingEntry = null;
+  renderLeaderboard();
+}
+
+function closeModal() {
+  document.getElementById('confirmModal').classList.remove('open');
+}
+
+// ===== SCORING =====
+function calcEntryScore(entry) {
+  applyScoresToField();
+  const allPicks = [...entry.picks.A, ...entry.picks.B, ...entry.picks.C];
+  const golferScores = allPicks.map(name => {
+    const g = fieldData.find(f => f.name === name);
+    if(!g) return { name, score: 999, status: 'active', counting: false };
+    const s = getGolferScore(g);
+    const status = g.status || 'active';
+    if(status === 'cut' || status === 'wd') return { name, score: 10, status, counting: false };
+    return { name, score: s === null ? 0 : s, status, counting: false };
+  });
+
+  // Sort by score, take best 5 (lowest), drop highest 3
+  const sorted = [...golferScores].sort((a,b) => a.score - b.score);
+  const counting = sorted.slice(0, 5);
+  counting.forEach(c => { const g = golferScores.find(x => x.name === c.name); if(g) g.counting = true; });
+
+  const total = counting.reduce((sum, g) => sum + g.score, 0);
+  const madeCut = golferScores.filter(g => g.status !== 'cut' && g.status !== 'wd').length;
+  const eliminated = madeCut < 5 && settings.status !== 'pre';
+
+  return { total, golferScores, eliminated, madeCut };
+}
+
+// ===== LEADERBOARD =====
+function renderLeaderboard() {
+  const container = document.getElementById('leaderboardContent');
+  document.getElementById('statEntries').textContent = entries.length;
+  const uniquePlayers = new Set(entries.map(e => e.email)).size;
+  document.getElementById('statPlayers').textContent = uniquePlayers;
+  document.getElementById('statPrize').textContent = '$' + (entries.length * ENTRY_FEE);
+  document.getElementById('statRound').textContent = settings.round === 0 ? 'Pre' : 'R' + settings.round;
+
+  if(entries.length === 0) {
+    container.innerHTML = `<div class="no-entries"><div class="icon">⛳</div><p>No entries yet. Be the first!</p><br><button class="btn btn-gold" onclick="document.querySelectorAll('.nav-btn')[1].click()">Enter the Pool</button></div>`;
+    return;
+  }
+
+  // Score all entries
+  const scored = entries.map((e,i) => {
+    const { total, golferScores, eliminated, madeCut } = calcEntryScore(e);
+    return { ...e, total, golferScores, eliminated, madeCut, idx: i };
+  });
+
+  // Sort
+  scored.sort((a, b) => {
+    if(a.eliminated && !b.eliminated) return 1;
+    if(!a.eliminated && b.eliminated) return -1;
+    return a.total - b.total;
+  });
+
+  // Assign positions
+  let pos = 1;
+  scored.forEach((e, i) => {
+    if(i > 0 && e.total === scored[i-1].total && e.eliminated === scored[i-1].eliminated) {
+      e.pos = 'T' + pos;
+    } else {
+      pos = i + 1;
+      e.pos = e.eliminated ? 'E' : String(pos);
+    }
+  });
+
+  const html = `
+    <div class="masters-board">
+      <div class="masters-board-header">
+        <span class="masters-board-title">Pool Standings</span>
+        <span class="refresh-info">${settings.status === 'pre' ? 'Pre-Tournament' : 'Round ' + settings.round}</span>
+      </div>
+      <div class="scoreboard-header sb-grid-entry" style="display:grid;">
+        <span>POS</span><span>ENTRY</span><span>SCORE</span><span>THRU</span><span>PICKS</span>
+      </div>
+      ${scored.map((e, i) => {
+        const isLeader = i === 0 && !e.eliminated;
+        const posClass = e.pos === '1' ? 'top3' : '';
+        const scoreDisp = settings.status === 'pre' ? '<span class="score-dash">—</span>' :
+          `<span class="${e.total < 0 ? 'score-under' : e.total > 0 ? 'score-over' : 'score-even'}">${e.total > 0 ? '+' : ''}${e.total}</span>`;
+
+        const chips = e.golferScores.map(g => {
+          const cls = g.status === 'cut' ? 'cut' : g.counting ? 'counting' : 'active';
+          return `<span class="golfer-chip ${cls}">${g.name.split(' ').pop()}</span>`;
+        }).join('');
+
+        return `<div class="sb-row ${isLeader ? 'leader' : ''}" style="display:grid;grid-template-columns:44px 1fr 80px 80px 1fr;gap:10px;align-items:center;">
+          <div class="pos-cell ${posClass}">${e.eliminated ? '<span style="color:var(--red);font-size:13px;">ELIM</span>' : e.pos}</div>
+          <div>
+            <div class="entry-name">${e.nickname || e.name}</div>
+            <div class="entry-meta">${e.name} ${e.paid ? '✅' : '⏳ Awaiting payment'}</div>
+          </div>
+          <div class="score-cell">${scoreDisp}</div>
+          <div style="font-size:12px;color:var(--gray);text-align:center;">${e.madeCut}/8 cut</div>
+          <div class="golfer-chips">${chips}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  container.innerHTML = html;
+}
+
+// ===== ESPN API LIVE SCORING =====
+const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard';
+const ESPN_MASTERS_ID = '401353230'; // 2026 Masters event ID - ESPN uses this for The Masters
+let espnData = null;
+let espnRefreshTimer = null;
+let espnLastFetch = 0;
+let espnFetchFailed = false;
+
+// Name normalizer: strip suffixes, lowercase, handle common mismatches
+function normalizeName(name) {
+  if (!name) return '';
+  return name.toLowerCase()
+    .replace(/\s+(jr\.?|sr\.?|ii|iii|iv)$/i, '')
+    .replace(/\./g, '')
+    .replace(/[áàâä]/g, 'a').replace(/[éèêë]/g, 'e')
+    .replace(/[íìîï]/g, 'i').replace(/[óòôö]/g, 'o')
+    .replace(/[úùûü]/g, 'u').replace(/[ý]/g, 'y')
+    .replace(/[ñ]/g, 'n').replace(/[ø]/g, 'o').replace(/[å]/g, 'a')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Try to match an ESPN competitor name to our fieldData
+function matchGolfer(espnName) {
+  const norm = normalizeName(espnName);
+  // Exact match first
+  let match = fieldData.find(g => normalizeName(g.name) === norm);
+  if (match) return match;
+  // Last name match as fallback
+  const lastName = norm.split(' ').pop();
+  match = fieldData.find(g => normalizeName(g.name).split(' ').pop() === lastName);
+  return match || null;
+}
+
+function setEspnStatus(state, text) {
+  const el = document.getElementById('espnStatus');
+  if (!el) return;
+  el.className = `espn-badge espn-${state}`;
+  el.innerHTML = `<span class="espn-dot"></span> ${text}`;
+}
+
+async function fetchESPN() {
+  try {
+    setEspnStatus('loading', 'Fetching…');
+    // ESPN CORS-friendly endpoint — no key needed
+    const res = await fetch(`${ESPN_URL}?dates=2026`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+
+    // Find the Masters event
+    const events = json.events || [];
+    let mastersEvent = events.find(e =>
+      e.name?.toLowerCase().includes('masters') ||
+      e.shortName?.toLowerCase().includes('masters')
+    );
+
+    if (!mastersEvent && events.length > 0) {
+      // Fallback: pick the first event if only one returned
+      mastersEvent = events[0];
+    }
+
+    if (!mastersEvent) {
+      setEspnStatus('error', 'No Masters data yet');
+      espnFetchFailed = true;
+      return;
+    }
+
+    espnData = mastersEvent;
+    espnFetchFailed = false;
+    espnLastFetch = Date.now();
+
+    // Parse competitors into our score format
+    const competitors = mastersEvent.competitions?.[0]?.competitors || [];
+    const status = mastersEvent.status?.type?.name || '';
+    const roundNum = mastersEvent.status?.period || 0;
+    const isLive = status === 'STATUS_IN_PROGRESS';
+    const isComplete = status === 'STATUS_FINAL' || status === 'STATUS_COMPLETE';
+    const isPre = status === 'STATUS_SCHEDULED' || status === 'STATUS_DELAYED' || competitors.length === 0;
+
+    if (isPre) {
+      setEspnStatus('loading', 'Pre-Tournament');
+      renderLivePreTournament();
+      return;
+    }
+
+    // Update settings round from ESPN data
+    if (roundNum > 0 && roundNum <= 4) {
+      settings.round = roundNum;
+      settings.status = isComplete ? 'final' : 'active';
+      localStorage.setItem('mastersPool2026_settings', JSON.stringify(settings));
+    }
+
+    // Map ESPN data into our fieldData scores
+    competitors.forEach(comp => {
+      const espnName = comp.athlete?.displayName || comp.athlete?.fullName || '';
+      const golfer = matchGolfer(espnName);
+      if (!golfer) return;
+
+      const toPar = comp.score?.value ?? 0; // cumulative to-par
+      const linescores = comp.linescores || [];
+      const cut = comp.status?.type?.name === 'STATUS_CUT' ||
+                  comp.status?.type?.description?.toLowerCase().includes('cut');
+      const wd   = comp.status?.type?.name === 'STATUS_WD' ||
+                   comp.status?.type?.description?.toLowerCase().includes('withdrew');
+
+      // Round scores from linescores (each is strokes for that round)
+      const par = 72; // Augusta is par 72
+      const r = (i) => {
+        if (!linescores[i]) return null;
+        const strokes = linescores[i].value;
+        return typeof strokes === 'number' ? strokes - par : null;
+      };
+
+      golfer.r1 = r(0); golfer.r2 = r(1); golfer.r3 = r(2); golfer.r4 = r(3);
+      golfer.status = wd ? 'wd' : cut ? 'cut' : 'active';
+
+      // Also persist into scores store so admin-manual scores aren't wiped
+      scores[golfer.name] = { r1: golfer.r1, r2: golfer.r2, r3: golfer.r3, r4: golfer.r4, status: golfer.status };
+    });
+    localStorage.setItem('mastersPool2026_scores', JSON.stringify(scores));
+
+    const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    setEspnStatus('live', isComplete ? 'Final' : `Live · R${roundNum}`);
+    const refreshEl = document.getElementById('lastRefresh');
+    if (refreshEl) refreshEl.textContent = `ESPN · Updated ${timeStr}`;
+
+    // Update live indicator in header
+    const ind = document.getElementById('liveIndicator');
+    if (ind) {
+      if (isComplete) ind.innerHTML = '<span class="live-dot" style="background:#6b7280;"></span> Final';
+      else if (isLive) ind.innerHTML = '<span class="live-dot"></span> Live';
+      else ind.innerHTML = '<span class="live-dot" style="background:#f59e0b;"></span> Round ' + roundNum;
+    }
+
+    renderLive();
+    renderLeaderboard();
+
+  } catch (err) {
+    console.warn('ESPN fetch error:', err);
+    espnFetchFailed = true;
+    setEspnStatus('error', 'ESPN unavailable');
+    // Fall back to manually entered scores
+    renderLive();
+  }
+}
+
+function renderLivePreTournament() {
+  const el = document.getElementById('liveScoreContent');
+  if (el) el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--gray);">
+    <div style="font-size:40px;margin-bottom:12px;">⛳</div>
+    <p style="font-size:15px;">Tournament begins April 9, 2026. ESPN live scores will appear here automatically.</p>
+    <p style="margin-top:10px;font-size:13px;color:var(--gray);">Auto-refreshing every 60 seconds once play begins.</p>
+  </div>`;
+}
+
+function renderLive() {
+  applyScoresToField();
+  const el = document.getElementById('liveScoreContent');
+  if (!el) return;
+
+  if (settings.status === 'pre' && !espnData) {
+    renderLivePreTournament();
+    return;
+  }
+
+  const sorted = fieldData.filter(g => g.status !== 'wd').sort((a, b) => {
+    const sa = getGolferScore(a), sb = getGolferScore(b);
+    if (sa === null && sb === null) return 0;
+    if (sa === null) return 1; if (sb === null) return -1;
+    if (a.status === 'cut' && b.status !== 'cut') return 1;
+    if (a.status !== 'cut' && b.status === 'cut') return -1;
+    return sa - sb;
+  });
+
+  // Build position labels handling ties
+  let livePosCounter = 1;
+  const posLabels = sorted.map((g, i) => {
+    if (g.status === 'cut') return 'CUT';
+    const s = getGolferScore(g);
+    if (s === null) return '—';
+    if (i > 0) {
+      const prevS = getGolferScore(sorted[i-1]);
+      if (s === prevS && sorted[i-1].status !== 'cut') return 'T' + livePosCounter;
+    }
+    livePosCounter = i + 1;
+    return String(livePosCounter);
+  });
+
+  el.innerHTML = `<table class="odds-table" style="width:100%;">
+    <thead><tr>
+      <th>POS</th><th>GOLFER</th><th>TOTAL</th>
+      <th>R1</th><th>R2</th><th>R3</th><th>R4</th>
+      <th>THRU</th><th>POOL</th>
+    </tr></thead>
+    <tbody>${sorted.map((g, i) => {
+      const s = getGolferScore(g);
+      const cls = s !== null && s < 0 ? 'score-under' : s !== null && s > 0 ? 'score-over' : 'score-even';
+      const rd = (r) => r !== null && r !== undefined
+        ? `<span class="${r<0?'score-under':r>0?'score-over':'score-even'}">${r>0?'+':''}${r}</span>` : '—';
+      const badgeCls = g.pool === 'A' ? 'badge-a' : g.pool === 'B' ? 'badge-b' : 'badge-c';
+      const cutBadge = g.status === 'cut'
+        ? '<span class="badge badge-cut" style="margin-left:6px;font-size:9px;">CUT</span>' : '';
+
+      // Thru: from ESPN competitor data if available
+      let thruStr = '—';
+      if (espnData) {
+        const comp = (espnData.competitions?.[0]?.competitors || []).find(c => matchGolfer(c.athlete?.displayName)?.name === g.name);
+        if (comp) {
+          const thru = comp.status?.thru;
+          const period = comp.status?.period;
+          thruStr = thru != null ? (thru === 18 ? 'F' : thru) : (period ? `R${period}` : '—');
+        }
+      }
+
+      const posLabel = posLabels[i];
+      const posStyle = posLabel === '1' ? 'color:var(--gold);' : '';
+
+      return `<tr>
+        <td style="font-family:'Bebas Neue';font-size:20px;${posStyle}">${posLabel}</td>
+        <td><strong>${g.name}</strong>${cutBadge}</td>
+        <td class="${cls}" style="font-weight:700;font-size:15px;">${s !== null ? (s>0?'+':'')+s : '—'}</td>
+        <td>${rd(g.r1)}</td><td>${rd(g.r2)}</td><td>${rd(g.r3)}</td><td>${rd(g.r4)}</td>
+        <td style="color:var(--gray);font-size:13px;">${thruStr}</td>
+        <td><span class="badge ${badgeCls}">${g.pool}</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ===== AUTO REFRESH =====
+function startAutoRefresh() {
+  if (espnRefreshTimer) clearInterval(espnRefreshTimer);
+  // Fetch immediately, then every 60s
+  fetchESPN();
+  espnRefreshTimer = setInterval(() => {
+    fetchESPN();
+  }, 60000);
+}
+
+
+function checkAdmin() {
+  if(document.getElementById('adminPwd').value === ADMIN_PASSWORD) {
+    adminUnlocked = true;
+    document.getElementById('adminLock').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    renderAdminPanel();
+    showToast('Admin unlocked ✅');
+  } else {
+    showToast('Incorrect password.');
+  }
+}
+
+function renderAdminPanel() {
+  document.getElementById('adminRound').value = settings.round || 0;
+  document.getElementById('adminStatus').value = settings.status || 'pre';
+  document.getElementById('adminVenmo').value = VENMO;
+
+  // Golfer select for scoring
+  const gSel = document.getElementById('adminGolferSelect');
+  gSel.innerHTML = '<option value="">— Select —</option>' + fieldData.map(g => `<option value="${g.name}">${g.name} (${g.odds})</option>`).join('');
+
+  // Financials
+  const paid = entries.filter(e => e.paid).length;
+  document.getElementById('adminFinancials').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="stat-item"><div class="stat-num">${entries.length}</div><div class="stat-lbl">Total Entries</div></div>
+      <div class="stat-item"><div class="stat-num" style="color:#4ade80;">${paid}</div><div class="stat-lbl">Paid</div></div>
+      <div class="stat-item"><div class="stat-num">${entries.length - paid}</div><div class="stat-lbl">Unpaid</div></div>
+      <div class="stat-item"><div class="stat-num">$${paid * ENTRY_FEE}</div><div class="stat-lbl">Collected</div></div>
+    </div>`;
+
+  // Entry list
+  const el = document.getElementById('adminEntryList');
+  if(entries.length === 0) { el.innerHTML = '<p style="color:var(--gray);font-size:14px;">No entries.</p>'; return; }
+  el.innerHTML = entries.map((e,i) => `
+    <div class="entry-admin-item">
+      <span>${e.nickname || e.name} <span style="color:var(--gray);font-size:12px;">${e.email}</span></span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="badge ${e.paid ? 'badge-made' : 'badge-cut'}">${e.paid ? 'PAID' : 'UNPAID'}</span>
+        <button class="btn btn-sm ${e.paid ? 'btn-outline' : 'btn-green'}" onclick="togglePaid(${i})">${e.paid ? 'Unmark' : 'Mark Paid'}</button>
+        <button class="btn btn-sm btn-red" onclick="deleteEntry(${i})">✕</button>
+      </div>
+    </div>`).join('');
+
+  renderAllEntriesAdmin();
+}
+
+function renderAllEntriesAdmin() {
+  const el = document.getElementById('allEntriesAdmin');
+  if(!el) return;
+  if(entries.length === 0) { el.innerHTML = '<p style="color:var(--gray);">No entries.</p>'; return; }
+  el.innerHTML = entries.map((e,i) => `
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div>
+          <strong>${e.nickname || e.name}</strong> <span style="color:var(--gray);font-size:13px;">— ${e.name} (${e.email})</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <span class="badge ${e.paid?'badge-made':'badge-cut'}">${e.paid?'PAID':'UNPAID'}</span>
+          <span style="font-size:12px;color:var(--gray);">TB: ${e.tiebreaker>0?'+':''}${e.tiebreaker}</span>
+        </div>
+      </div>
+      <div style="font-size:13px;display:grid;gap:4px;">
+        <div><span class="badge badge-a">A</span> &nbsp;${e.picks.A.join(' · ')}</div>
+        <div><span class="badge badge-b">B</span> &nbsp;${e.picks.B.join(' · ')}</div>
+        <div><span class="badge badge-c">C</span> &nbsp;${e.picks.C.join(' · ')}</div>
+      </div>
+    </div>`).join('');
+}
+
+function togglePaid(i) {
+  entries[i].paid = !entries[i].paid;
+  localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
+  renderAdminPanel();
+  showToast(entries[i].paid ? '✅ Marked as paid — syncing…' : '🔄 Marked unpaid — syncing…');
+
+  // Sync paid status to Google Sheet
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    cache: 'no-cache',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'updatePaid',
+      email: entries[i].email,
+      name:  entries[i].name,
+      paid:  entries[i].paid
+    })
+  })
+  .then(() => showToast(entries[i].paid ? '✅ Payment recorded in sheet.' : '✅ Unpaid status saved to sheet.'))
+  .catch(err => {
+    console.error('Paid sync error:', err);
+    showToast('⚠️ Saved locally — sheet sync failed.');
+  });
+}
+
+function deleteEntry(i) {
+  if(!confirm('Delete this entry? This will also remove it from the Google Sheet.')) return;
+
+  // Capture identifying info BEFORE splicing
+  const entry = entries[i];
+  const deletePayload = {
+    action: 'delete',
+    email: entry.email,
+    timestamp: entry.timestamp,
+    name: entry.name
+  };
+
+  // Remove locally
+  entries.splice(i, 1);
+  localStorage.setItem('mastersPool2026_entries', JSON.stringify(entries));
+  renderAdminPanel();
+  renderLeaderboard();
+  showToast('Deleting entry…');
+
+  // Sync deletion to Google Sheet
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    cache: 'no-cache',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(deletePayload)
+  })
+  .then(() => showToast('✅ Entry deleted from sheet.'))
+  .catch(err => {
+    console.error('Sheet delete error:', err);
+    showToast('⚠️ Deleted locally — sheet sync failed.');
+  });
+}
+
+function saveSettings() {
+  settings.round = parseInt(document.getElementById('adminRound').value);
+  settings.status = document.getElementById('adminStatus').value;
+  localStorage.setItem('mastersPool2026_settings', JSON.stringify(settings));
+
+  // Update Venmo
+  const venmoInput = document.getElementById('adminVenmo').value.trim();
+  if(venmoInput) {
+    VENMO = venmoInput.startsWith('@') ? venmoInput : '@' + venmoInput;
+    localStorage.setItem('mastersPool2026_venmo', VENMO);
+    applyVenmoEverywhere();
+  }
+
+  showToast('Settings saved ✅');
+  renderLeaderboard();
+  const ind = document.getElementById('liveIndicator');
+  if(settings.status === 'active') ind.innerHTML = '<span class="live-dot"></span> Live';
+  else if(settings.status === 'pre') ind.innerHTML = '<span class="live-dot" style="background:#f59e0b;"></span> Pre-Tournament';
+  else if(settings.status === 'final') ind.innerHTML = '<span class="live-dot" style="background:#6b7280;"></span> Final';
+}
+
+function applyVenmoEverywhere() {
+  const handle = VENMO.replace('@','');
+  const url = `https://venmo.com/${handle}`;
+  document.querySelectorAll('.venmo-btn').forEach(el => { el.href = url; });
+  document.querySelectorAll('.venmo-handle').forEach(el => { el.textContent = VENMO; });
+}
+
+function updateGolferScore() {
+  const name = document.getElementById('adminGolferSelect').value;
+  const score = document.getElementById('adminScore').value;
+  const status = document.getElementById('adminCutStatus').value;
+  if(!name) { showToast('Select a golfer.'); return; }
+
+  const round = settings.round;
+  if(!scores[name]) scores[name] = {r1:null,r2:null,r3:null,r4:null,status:'active'};
+  if(round >= 1) scores[name][`r${round}`] = score !== '' ? parseInt(score) : null;
+  scores[name].status = status;
+  localStorage.setItem('mastersPool2026_scores', JSON.stringify(scores));
+  applyScoresToField();
+  showToast(`Updated: ${name}`);
+  renderLeaderboard();
+}
+
+function exportEntries() {
+  const headers = ['Name','Email','Entry Name','Tiebreaker','Paid','Pool A1','Pool A2','Pool B1','Pool B2','Pool B3','Pool B4','Pool C1','Pool C2','Timestamp'];
+  const rows = entries.map(e => [
+    e.name, e.email, e.nickname||e.name, e.tiebreaker, e.paid?'Yes':'No',
+    ...e.picks.A, ...e.picks.B, ...e.picks.C, e.timestamp
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'masters_pool_2026_entries.csv';
+  a.click();
+}
+
+// ===== STATS =====
+function renderStats() {
+  const el = document.getElementById('statsContent');
+  if(!el) return;
+
+  if(entries.length === 0) {
+    el.innerHTML = `<div class="stats-empty"><div class="icon">📊</div><p style="font-size:16px;">No entries yet — statistics will appear once participants join the pool.</p><br><button class="btn btn-gold" onclick="document.querySelectorAll('.nav-btn')[1].click()">Enter the Pool</button></div>`;
+    return;
+  }
+
+  applyScoresToField();
+  const totalEntries = entries.length;
+  const allPicks = entries.flatMap(e => [...e.picks.A, ...e.picks.B, ...e.picks.C]);
+  const totalPicks = allPicks.length;
+  const uniquePlayers = new Set(entries.map(e => e.email)).size;
+
+  // ---- Golfer pick frequency ----
+  const pickCount = {};
+  allPicks.forEach(name => { pickCount[name] = (pickCount[name] || 0) + 1; });
+  const sortedByPop = Object.entries(pickCount).sort((a,b) => b[1]-a[1]);
+  const mostPicked = sortedByPop.slice(0, 10);
+  const leastPicked = sortedByPop.filter(([,c]) => c > 0).slice(-6).reverse();
+  const unpicked = fieldData.filter(g => !pickCount[g.name]).map(g => g.name);
+
+  // ---- Pool breakdown ----
+  const poolACounts = {}, poolBCounts = {}, poolCCounts = {};
+  entries.forEach(e => {
+    e.picks.A.forEach(n => { poolACounts[n] = (poolACounts[n]||0)+1; });
+    e.picks.B.forEach(n => { poolBCounts[n] = (poolBCounts[n]||0)+1; });
+    e.picks.C.forEach(n => { poolCCounts[n] = (poolCCounts[n]||0)+1; });
+  });
+  const topA = Object.entries(poolACounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topB = Object.entries(poolBCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topC = Object.entries(poolCCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+  // ---- Tiebreaker analysis ----
+  const tbs = entries.map(e => e.tiebreaker).filter(t => t !== undefined && t !== null);
+  const tbMin = Math.min(...tbs), tbMax = Math.max(...tbs);
+  const tbAvg = (tbs.reduce((a,b)=>a+b,0)/tbs.length).toFixed(1);
+  const tbMedian = [...tbs].sort((a,b)=>a-b)[Math.floor(tbs.length/2)];
+  // bucket tbs into histogram bins of 2
+  const tbBuckets = {};
+  tbs.forEach(t => {
+    const bucket = Math.floor(t/2)*2;
+    const key = `${bucket>0?'+':''}${bucket}`;
+    tbBuckets[key] = (tbBuckets[key]||0)+1;
+  });
+  const tbBucketsSorted = Object.entries(tbBuckets).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+  const tbMax2 = Math.max(...Object.values(tbBuckets));
+
+  // ---- Most unique/contrarian picks (low pick rate Pool B/C) ----
+  const contrarian = Object.entries({...poolBCounts,...poolCCounts})
+    .filter(([,c])=>c===1)
+    .map(([name])=>name);
+
+  // ---- Golfer appearing in most entries with specific score trend ----
+  // For live: pick the leader's golfers that are in the most entries
+  const scored = entries.map(e => {
+    const {total} = calcEntryScore(e);
+    return {...e, total};
+  }).sort((a,b)=>a.total-b.total);
+
+  // ---- Diversity score: how many unique golfers across all entries ----
+  const uniqueGolfers = Object.keys(pickCount).length;
+  const fieldSize = fieldData.length;
+  const diversityPct = Math.round(uniqueGolfers/fieldSize*100);
+
+  // ---- Who has the most popular entry (most-picked golfers) ----
+  const entryPopScore = entries.map(e => {
+    const all = [...e.picks.A,...e.picks.B,...e.picks.C];
+    const score = all.reduce((s,n)=>(s + (pickCount[n]||0)), 0);
+    return {name: e.nickname||e.name, score};
+  }).sort((a,b)=>b.score-a.score);
+
+  // ---- Who has the most contrarian entry ----
+  const entryContrarianScore = entries.map(e => {
+    const all = [...e.picks.A,...e.picks.B,...e.picks.C];
+    const score = all.reduce((s,n)=>(s + (pickCount[n]||0)), 0);
+    return {name: e.nickname||e.name, score};
+  }).sort((a,b)=>a.score-b.score);
+
+  // ---- Helpers ----
+  const pct = (n) => totalEntries > 0 ? Math.round(n/totalEntries*100) : 0;
+  const barRow = (name, count, max, fillClass, showOdds) => {
+    const g = fieldData.find(f=>f.name===name);
+    const oddsStr = g ? ` <span style="color:var(--gray);font-size:11px;">${g.odds}</span>` : '';
+    return `<div class="bar-row">
+      <div class="bar-label">
+        <span class="bar-name">${name}${showOdds ? oddsStr : ''}</span>
+        <span class="bar-val">${count} (${pct(count)}%)</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${Math.round(count/max*100)}%"></div></div>
+    </div>`;
+  };
+
+  // ---- Generate insights ----
+  const insights = [];
+  if(mostPicked.length > 0) {
+    const [topName, topCnt] = mostPicked[0];
+    insights.push(`<strong>${topName}</strong> is the most selected golfer, appearing in <strong>${topCnt} of ${totalEntries}</strong> entries (${pct(topCnt)}%).`);
+  }
+  if(unpicked.length > 0) {
+    insights.push(`<strong>${unpicked.length} golfer${unpicked.length>1?'s':''}</strong> in the field ${unpicked.length>1?'have':'has'} not been selected by anyone: ${unpicked.slice(0,4).join(', ')}${unpicked.length>4?' and more':''}.`);
+  }
+  if(contrarian.length > 0) {
+    insights.push(`<strong>${contrarian.length} contrarian pick${contrarian.length>1?'s':''}</strong> appear in exactly one entry, giving those players a potential edge if that golfer performs.`);
+  }
+  if(tbs.length > 1) {
+    insights.push(`Tiebreaker guesses range from <strong>${tbMin > 0 ? '+' : ''}${tbMin}</strong> to <strong>${tbMax > 0 ? '+' : ''}${tbMax}</strong> — the consensus winning score prediction is <strong>${tbAvg > 0 ? '+' : ''}${tbAvg}</strong>.`);
+  }
+  if(uniquePlayers > 1 && totalEntries > uniquePlayers) {
+    const doubleDown = totalEntries - uniquePlayers;
+    insights.push(`<strong>${doubleDown} player${doubleDown>1?'s':''}</strong> submitted 2 entries to maximize their chances.`);
+  }
+  if(entryPopScore.length > 0 && entryContrarianScore.length > 0 && entryPopScore[0].name !== entryContrarianScore[0].name) {
+    insights.push(`<strong>${entryPopScore[0].name}</strong> has the most consensus-heavy entry (fewest unique picks), while <strong>${entryContrarianScore[0].name}</strong> is the biggest contrarian.`);
+  }
+
+  // ---- BUILD HTML ----
+  el.innerHTML = `
+
+    <!-- KEY FACTS STRIP -->
+    <div class="fact-grid">
+      <div class="fact-card"><div class="fact-icon">📝</div><div class="fact-num">${totalEntries}</div><div class="fact-label">Total Entries</div></div>
+      <div class="fact-card"><div class="fact-icon">👥</div><div class="fact-num">${uniquePlayers}</div><div class="fact-label">Unique Players</div></div>
+      <div class="fact-card"><div class="fact-icon">⛳</div><div class="fact-num">${uniqueGolfers}</div><div class="fact-label">Golfers Picked</div></div>
+      <div class="fact-card"><div class="fact-icon">🎯</div><div class="fact-num">${fieldSize - uniqueGolfers}</div><div class="fact-label">Golfers Ignored</div></div>
+      <div class="fact-card"><div class="fact-icon">🦄</div><div class="fact-num">${contrarian.length}</div><div class="fact-label">Contrarian Picks</div></div>
+      <div class="fact-card"><div class="fact-icon">💰</div><div class="fact-num">$${totalEntries * ENTRY_FEE}</div><div class="fact-label">Prize Pool</div></div>
+    </div>
+
+    <!-- INSIGHTS -->
+    ${insights.length > 0 ? `
+    <div style="margin-bottom:24px;">
+      <div class="stats-card-title" style="margin-bottom:12px;"><span class="icon">💡</span> Key Insights</div>
+      ${insights.map(i => `<div class="insight-box">${i}</div>`).join('')}
+    </div>` : ''}
+
+    <!-- MAIN GRID -->
+    <div class="stats-grid">
+
+      <!-- Most Popular Golfers -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🔥</span> Most Popular Picks</div>
+        ${mostPicked.map(([name,cnt]) => barRow(name, cnt, mostPicked[0][1], 'bar-fill-gold', true)).join('')}
+      </div>
+
+      <!-- Tiebreaker Distribution -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🎯</span> Tiebreaker Score Predictions</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+            <div style="font-family:'Bebas Neue';font-size:28px;color:var(--gold);">${tbAvg > 0 ? '+' : ''}${tbAvg}</div>
+            <div style="font-size:11px;color:var(--gray);">Avg Guess</div>
+          </div>
+          <div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+            <div style="font-family:'Bebas Neue';font-size:28px;color:#6ee7a7;">${tbMedian > 0 ? '+' : ''}${tbMedian}</div>
+            <div style="font-size:11px;color:var(--gray);">Median Guess</div>
+          </div>
+          <div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+            <div style="font-family:'Bebas Neue';font-size:28px;color:#93c5fd;">${tbMin > 0 ? '+' : ''}${tbMin}</div>
+            <div style="font-size:11px;color:var(--gray);">Most Optimistic</div>
+          </div>
+          <div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+            <div style="font-family:'Bebas Neue';font-size:28px;color:#fca5a5;">${tbMax > 0 ? '+' : ''}${tbMax}</div>
+            <div style="font-size:11px;color:var(--gray);">Most Conservative</div>
+          </div>
+        </div>
+        ${tbBucketsSorted.length > 1 ? `
+        <div style="font-size:11px;color:var(--gray);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Score Distribution</div>
+        <div class="tb-chart">
+          ${tbBucketsSorted.map(([k,v]) => `
+            <div class="tb-bar-wrap">
+              <div class="tb-bar" style="height:${Math.round(v/tbMax2*70)+4}px;background:${parseInt(k)<=-12?'#4ade80':parseInt(k)<=0?'#c9a84c':'#f87171'};"></div>
+              <div class="tb-bar-label">${k}</div>
+            </div>`).join('')}
+        </div>` : ''}
+      </div>
+
+      <!-- Pool A Breakdown -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🅰</span> Pool A — Favorites Picks</div>
+        ${topA.length === 0 ? '<p style="color:var(--gray);font-size:13px;">No data yet.</p>' :
+          topA.map(([name,cnt]) => barRow(name, cnt, topA[0][1], 'bar-fill-gold', true)).join('')}
+      </div>
+
+      <!-- Pool B Breakdown -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🅱</span> Pool B — Mid-Tier Picks</div>
+        ${topB.length === 0 ? '<p style="color:var(--gray);font-size:13px;">No data yet.</p>' :
+          topB.map(([name,cnt]) => barRow(name, cnt, topB[0][1], 'bar-fill-green', true)).join('')}
+      </div>
+
+      <!-- Pool C Breakdown -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🇨</span> Pool C — Long Shot Picks</div>
+        ${topC.length === 0 ? '<p style="color:var(--gray);font-size:13px;">No data yet.</p>' :
+          topC.map(([name,cnt]) => barRow(name, cnt, topC[0][1], 'bar-fill-blue', true)).join('')}
+      </div>
+
+      <!-- Field Diversity -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🌐</span> Field Coverage</div>
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="position:relative;display:inline-block;width:120px;height:120px;margin:0 auto;">
+            <svg viewBox="0 0 36 36" style="width:120px;height:120px;transform:rotate(-90deg);">
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3"/>
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--gold)" stroke-width="3"
+                stroke-dasharray="${(diversityPct * 100 / 100).toFixed(1)} 100"
+                stroke-linecap="round"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div style="font-family:'Bebas Neue';font-size:26px;color:var(--gold);line-height:1;">${diversityPct}%</div>
+              <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:0.3px;">covered</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+          <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+            <div style="font-family:'Bebas Neue';font-size:24px;color:var(--gold);">${uniqueGolfers}</div>
+            <div style="font-size:10px;color:var(--gray);">Picked</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+            <div style="font-family:'Bebas Neue';font-size:24px;color:#f87171;">${unpicked.length}</div>
+            <div style="font-size:10px;color:var(--gray);">Unpicked</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+            <div style="font-family:'Bebas Neue';font-size:24px;color:#6ee7a7;">${contrarian.length}</div>
+            <div style="font-size:10px;color:var(--gray);">Solo Picks</div>
+          </div>
+        </div>
+        ${unpicked.length > 0 ? `<div style="margin-top:14px;font-size:12px;color:var(--gray);">Unpicked golfers: ${unpicked.slice(0,5).map(n=>`<span style="color:rgba(245,240,232,0.5)">${n}</span>`).join(', ')}${unpicked.length>5?` +${unpicked.length-5} more`:''}</div>` : ''}
+      </div>
+
+      <!-- Contrarian & Popular Entries -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🦄</span> Contrarian Picks (1 entry only)</div>
+        ${contrarian.length === 0 ?
+          '<p style="color:var(--gray);font-size:13px;">No solo picks yet — everyone is picking the same players!</p>' :
+          contrarian.slice(0,8).map(name => {
+            const g = fieldData.find(f=>f.name===name);
+            const pool = g ? g.pool : '?';
+            const odds = g ? g.odds : '';
+            const badgeCls = pool==='A'?'badge-a':pool==='B'?'badge-b':'badge-c';
+            const ownerEntry = entries.find(e => [...e.picks.A,...e.picks.B,...e.picks.C].includes(name));
+            const owner = ownerEntry ? (ownerEntry.nickname||ownerEntry.name) : '?';
+            return `<div class="consensus-row">
+              <div class="consensus-avatar">⛳</div>
+              <div class="consensus-info">
+                <div class="consensus-name">${name} <span style="font-size:10px;color:var(--gray);">${odds}</span></div>
+                <div class="consensus-sub">Picked by: <strong style="color:var(--cream);">${owner}</strong> &nbsp;<span class="badge ${badgeCls}" style="font-size:9px;">Pool ${pool}</span></div>
+              </div>
+              <div style="font-size:11px;color:#93c5fd;font-weight:700;">UNIQUE</div>
+            </div>`;
+          }).join('')
+        }
+      </div>
+
+      <!-- Entry Styles: Popular vs Contrarian -->
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🏅</span> Entry Strategy Ranking</div>
+        <div style="font-size:11px;color:var(--gray);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Most consensus-heavy → most contrarian</div>
+        ${entries.map(e => {
+          const all = [...e.picks.A,...e.picks.B,...e.picks.C];
+          const popularityScore = all.reduce((s,n)=>(s+(pickCount[n]||0)),0);
+          const maxPossible = totalEntries * 8;
+          const pctContrarian = 100 - Math.round(popularityScore / maxPossible * 100);
+          return {name: e.nickname||e.name, score: pctContrarian, popularityScore};
+        }).sort((a,b)=>b.popularityScore-a.popularityScore).map(({name, score, popularityScore}, i) => {
+          const label = popularityScore > (totalEntries*5) ? '🐑 Consensus' : score > 60 ? '🦄 Contrarian' : '⚖️ Balanced';
+          return `<div class="bar-row">
+            <div class="bar-label"><span class="bar-name">${name} <span style="font-size:10px;color:var(--gray);">${label}</span></span><span class="bar-val">${score}% unique</span></div>
+            <div class="bar-track"><div class="bar-fill bar-fill-purple" style="width:${score}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Least Popular Picks -->
+      ${leastPicked.length > 0 ? `
+      <div class="stats-card">
+        <div class="stats-card-title"><span class="icon">🕵️</span> Sleeper Picks (Low Ownership)</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Golfers picked by few entries — potential differentiators</div>
+        ${leastPicked.map(([name,cnt]) => barRow(name, cnt, leastPicked[0][1] || 1, 'bar-fill-red', true)).join('')}
+      </div>` : ''}
+
+    </div>
+
+    <!-- FULL GOLFER HEATMAP -->
+    ${totalEntries >= 2 ? `
+    <div class="stats-card" style="margin-bottom:24px;">
+      <div class="stats-card-title"><span class="icon">🗺️</span> Complete Pick Frequency Map</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:14px;">Every golfer selected across all entries — darker = more popular</div>
+      <div>${sortedByPop.map(([name, cnt]) => {
+        const intensity = cnt / mostPicked[0][1];
+        const r = Math.round(26 + intensity*180);
+        const g2 = Math.round(61 + intensity*60);
+        const b = Math.round(43 + intensity*30);
+        const alpha = 0.3 + intensity*0.7;
+        const golfer = fieldData.find(f=>f.name===name);
+        const pool = golfer ? golfer.pool : '?';
+        const badgeCls = pool==='A'?'badge-a':pool==='B'?'badge-b':'badge-c';
+        return `<div class="heatmap-row">
+          <div class="heatmap-name">${name}</div>
+          <div class="heatmap-cell" style="background:rgba(${r},${g2},${b},${alpha});color:${intensity>0.5?'rgba(0,0,0,0.8)':'var(--cream)'};">
+            <span class="badge ${badgeCls}" style="font-size:9px;padding:1px 5px;">Pool ${pool}</span>
+          </div>
+          <div class="heatmap-count">${cnt}</div>
+        </div>`;
+      }).join('')}</div>
+    </div>` : ''}
+
+  `;
+}
+
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== INIT =====
+applyScoresToField();
+renderLeaderboard(); // Render immediately with cached localStorage data
+populateSelects();
+applyVenmoEverywhere();
+startAutoRefresh();
+fetchEntriesFromSheet(); // Then overwrite with live sheet data
+</script>
+</body>
+</html>
