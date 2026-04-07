@@ -1443,10 +1443,14 @@ function renderLeaderboard() {
         const scoreDisp = settings.status === 'pre' ? '<span class="score-dash">—</span>' :
           `<span class="${e.total < 0 ? 'score-under' : e.total > 0 ? 'score-over' : 'score-even'}">${e.total > 0 ? '+' : ''}${e.total}</span>`;
 
-        const chips = e.golferScores.map(g => {
-          const cls = g.status === 'cut' ? 'cut' : g.counting ? 'counting' : 'active';
-          return `<span class="golfer-chip ${cls}">${g.name.split(' ').pop()}</span>`;
-        }).join('');
+        
+        const chips = settings.status === 'pre'
+  ? '<span style="color:var(--gray);font-size:12px;">Picks hidden until Thursday</span>'
+  : e.golferScores.map(g => {
+      const cls = g.status === 'cut' ? 'cut' : g.counting ? 'counting' : 'active';
+      return `<span class="golfer-chip ${cls}">${g.name.split(' ').pop()}</span>`;
+    }).join('');
+
 
         return `<div class="sb-row ${isLeader ? 'leader' : ''}" style="display:grid;grid-template-columns:44px 1fr 80px 80px 1fr;gap:10px;align-items:center;">
           <div class="pos-cell ${posClass}">${e.eliminated ? '<span style="color:var(--red);font-size:13px;">ELIM</span>' : e.pos}</div>
