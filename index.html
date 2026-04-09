@@ -843,15 +843,6 @@
           <button class="btn btn-gold btn-sm" onclick="saveSettings()">Save Settings</button>
         </div>
 
-        <div class="admin-card" style="background:rgba(45,106,79,0.1);border-color:rgba(64,145,108,0.3);">
-          <h3 style="color:#6ee7a7;">📡 Live Score Source</h3>
-          <p style="font-size:13px;color:rgba(245,240,232,0.7);line-height:1.6;">Golfer scores are pulled automatically from <strong style="color:var(--cream);">ESPN's live leaderboard</strong> every 60 seconds during the tournament. Manual score overrides have been removed — the live feed is the source of truth.</p>
-          <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
-            <span id="adminEspnStatus" class="espn-badge espn-loading"><span class="espn-dot"></span> Checking…</span>
-            <button class="btn btn-green btn-sm" onclick="fetchESPN().then(()=>{ document.getElementById('adminEspnStatus').className='espn-badge espn-live'; document.getElementById('adminEspnStatus').innerHTML='<span class=espn-dot></span> Refreshed'; })">↻ Force Refresh</button>
-          </div>
-        </div>
-
         <div class="admin-card">
           <h3>✅ Entry Management</h3>
           <div id="adminEntryList"><p style="color:var(--gray);font-size:14px;">No entries yet.</p></div>
@@ -1077,6 +1068,17 @@ let adminUnlocked = false;
 let sheetSynced = false; // tracks whether we've successfully loaded from sheet
 // Picks are shown automatically once live ESPN scores are available (not pre-tournament)
 function picksVisible() { return settings.status !== 'pre'; }
+
+// Show/hide the entries-closed overlay based on tournament status
+function updateEntriesClosedState() {
+  const isClosed = settings.status !== 'pre';
+  const banner = document.getElementById('entriesClosedBanner');
+  const body   = document.getElementById('entryFormBody');
+  if (banner) banner.style.display = isClosed ? 'block' : 'none';
+  if (body)   body.style.cssText   = isClosed
+    ? 'opacity:0.35;pointer-events:none;user-select:none;filter:grayscale(0.4);'
+    : '';
+}
 
 // Show/hide the entries-closed overlay based on tournament status
 function updateEntriesClosedState() {
@@ -1518,6 +1520,19 @@ function renderLeaderboard() {
   document.getElementById('statPrize').textContent = '$' + (entries.length * ENTRY_FEE);
   document.getElementById('statRound').textContent = settings.round === 0 ? 'Pre' : 'R' + settings.round;
 
+  // Update subtitle dynamically based on tournament status
+  const sub = document.getElementById('lbSubtitle');
+  if (sub) {
+    if (settings.status === 'pre') {
+      sub.textContent = 'Pre-tournament — entries open. Tournament begins April 9.';
+    } else if (settings.status === 'final') {
+      sub.textContent = 'Tournament complete · Final standings';
+    } else {
+      const roundLabel = settings.round ? `Round ${settings.round}` : 'Live';
+      sub.textContent = `${roundLabel} · Live · Entries closed`;
+    }
+  }
+
   if(entries.length === 0) {
     container.innerHTML = `<div class="no-entries"><div class="icon">⛳</div><p>No entries yet. Be the first!</p><br><button class="btn btn-gold" onclick="document.querySelectorAll('.nav-btn')[1].click()">Enter the Pool</button></div>`;
     return;
@@ -1564,10 +1579,20 @@ function renderLeaderboard() {
         
         const chips = !picksVisible()
   ? '<span style="color:var(--gray);font-size:12px;font-style:italic;">Picks revealed when tournament begins</span>'
-  : e.golferScores.map(g => {
-      const cls = g.status === 'cut' ? 'cut' : g.counting ? 'counting' : 'active';
-      return `<span class="golfer-chip ${cls}">${g.name.split(' ').pop()}</span>`;
-    }).join('');
+  : [...e.golferScores]
+      // Counting (best 5) first, then non-counting; within each group sort best score first
+      .sort((a, b) => {
+        if (a.counting !== b.counting) return (b.counting ? 1 : 0) - (a.counting ? 1 : 0);
+        return a.score - b.score;
+      })
+      .map(g => {
+        const cls = g.status === 'cut' ? 'cut' : g.counting ? 'counting' : 'active';
+        const lastName = g.name.split(' ').slice(-1)[0];
+        // Show score for active/counting players; cut/wd get no score
+        const isActive = g.status !== 'cut' && g.status !== 'wd' && g.score !== 999;
+        const sc = isActive ? ` ${fmtScore(g.score)}` : '';
+        return `<span class="golfer-chip ${cls}">${lastName}${sc}</span>`;
+      }).join('');
 
 
         return `<div class="sb-row ${isLeader ? 'leader' : ''}" style="display:grid;grid-template-columns:44px 1fr 80px 1fr;gap:10px;align-items:center;">
@@ -1669,7 +1694,11 @@ async function fetchESPN() {
     // Parse competitors into our score format
     const competitors = mastersEvent.competitions?.[0]?.competitors || [];
     const status = mastersEvent.status?.type?.name || '';
-    const roundNum = mastersEvent.status?.period || 0;
+    // Try multiple ESPN paths for round number — different endpoints may nest it differently
+    const roundNum = mastersEvent.status?.period
+      || mastersEvent.competitions?.[0]?.status?.period
+      || mastersEvent.status?.currentPeriod
+      || 0;
     const isLive = status === 'STATUS_IN_PROGRESS';
     const isComplete = status === 'STATUS_FINAL' || status === 'STATUS_COMPLETE';
     const isPre = (status === 'STATUS_SCHEDULED' || status === 'STATUS_DELAYED') && competitors.length === 0;
@@ -1680,12 +1709,25 @@ async function fetchESPN() {
       return;
     }
 
+    // If ESPN period fields are all 0/undefined, infer round from how many linescores most competitors have
+    let effectiveRound = roundNum;
+    if (effectiveRound === 0 && competitors.length > 0) {
+      // Count linescores with a real score value across first 20 competitors
+      const sample = competitors.slice(0, 20);
+      const completedCounts = sample.map(c =>
+        (c.linescores || []).filter(l => l.displayValue && l.displayValue !== '--' && l.displayValue !== '').length
+      );
+      const medianCompleted = completedCounts.sort((a,b)=>a-b)[Math.floor(completedCounts.length/2)] || 0;
+      // If most have 0 completed rounds but have scores, they're in R1
+      effectiveRound = medianCompleted >= 1 ? medianCompleted + 1 : 1;
+    }
+
     // Update settings whenever we have a live event — decouple from roundNum check
     // so status flips off 'pre' as soon as any competitor data arrives
     if (isComplete) settings.status = 'final';
-    else if (roundNum >= 3) settings.status = 'cut';
+    else if (effectiveRound >= 3) settings.status = 'cut';
     else settings.status = 'active';
-    if (roundNum > 0 && roundNum <= 4) settings.round = roundNum;
+    if (effectiveRound > 0 && effectiveRound <= 4) settings.round = effectiveRound;
     localStorage.setItem('mastersPool2026_settings', JSON.stringify(settings));
 
     const par = 72; // Augusta National par
@@ -1707,16 +1749,11 @@ async function fetchESPN() {
       return n;
     }
 
-    // Debug log: first 5 competitors so you can inspect the raw ESPN shape in DevTools
-    console.log('[ESPN] event status:', status, 'round:', roundNum, 'competitors:', competitors.length);
-    competitors.slice(0, 5).forEach(c => {
-      console.log('[ESPN] sample competitor:', c.athlete?.displayName,
-        '| score.value:', c.score?.value,
-        '| score.displayValue:', c.score?.displayValue,
-        '| status.thru:', c.status?.thru,
-        '| status.detail:', c.status?.type?.shortDetail || c.status?.type?.detail,
-        '| linescores:', (c.linescores||[]).map(l => l.displayValue || l.value));
-    });
+    // Debug log — inspect in DevTools (F12 → Console) to diagnose thru / round issues
+    console.log('[ESPN] status:', status, '| period:', roundNum, '| effectiveRound:', effectiveRound, '| competitors:', competitors.length);
+    // Dump FULL raw shape of first competitor so we can find the real field names
+    if (competitors[0]) console.log('[ESPN] FULL comp[0] keys:', Object.keys(competitors[0]),
+      '\n  raw:', JSON.stringify(competitors[0]).slice(0, 800));
 
     // Map ESPN data into our fieldData scores
     competitors.forEach(comp => {
@@ -1759,31 +1796,60 @@ async function fetchESPN() {
       golfer.r1 = r(0); golfer.r2 = r(1); golfer.r3 = r(2); golfer.r4 = r(3);
       golfer.cumToPar = cumToPar;
       golfer.status = wd ? 'wd' : cut ? 'cut' : 'active';
-      golfer.pos = comp.status?.position?.abbreviation || comp.status?.type?.shortDetail || '-';
-      golfer.thru = comp.status?.displayValue || '--';
 
-      // Thru: ESPN stores "Thru 14" / "F" in comp.status.displayValue (most reliable)
-      // Fall back to numeric thru, then detail strings
-      const statusDV = comp.status?.displayValue || '';
+      // Thru: ESPN status fields are absent in this API shape — derive from linescores instead.
+      // Priorities: status fields (if present) → linescore-based inference
+      const statusDV    = comp.status?.displayValue || '';
       const thruNumeric = comp.status?.thru;
-      const detail = comp.status?.type?.shortDetail || comp.status?.type?.detail || '';
+      const compPeriod  = comp.status?.period;
+      const compStatusType = comp.status?.type?.name || '';
+      const detail      = comp.status?.type?.shortDetail || comp.status?.type?.detail || '';
       let thru = null;
-      if (statusDV) {
-        if (/^F$/i.test(statusDV.trim())) {
-          thru = 'F';
-        } else {
-          const m = statusDV.match(/(\d+)/);
-          if (m) thru = parseInt(m[1]);
-        }
-      } else if (typeof thruNumeric === 'number') {
-        thru = thruNumeric === 18 ? 'F' : (thruNumeric > 0 ? thruNumeric : null);
-      } else if (detail) {
-        if (/\bF\b/i.test(detail)) thru = 'F';
-        else { const m = detail.match(/thru\s+(\d+)/i); if (m) thru = parseInt(m[1]); }
-      }
-      golfer.thru = thru;
 
-      scores[golfer.name] = { r1: golfer.r1, r2: golfer.r2, r3: golfer.r3, r4: golfer.r4, cumToPar: golfer.cumToPar, thru: golfer.thru, status: golfer.status };
+      // Helper: parse "Thru N" / "F" / bare number from a string
+      const parseThruStr = (s) => {
+        if (!s) return null;
+        const t = String(s).trim();
+        if (/^F$/i.test(t) || /^F\s/i.test(t)) return 'F';
+        const m = t.match(/thru\s+(\d+)/i);
+        if (m) return parseInt(m[1]);
+        if (/^\d+$/.test(t)) { const n = parseInt(t); if (n > 0 && n <= 18) return n; }
+        return null;
+      };
+
+      // 1. status.displayValue — "Thru 7", "F", "* -4 Thru 7"
+      thru = parseThruStr(statusDV);
+      // 2. numeric status.thru field
+      if (thru === null && typeof thruNumeric === 'number')
+        thru = thruNumeric === 18 ? 'F' : (thruNumeric > 0 ? thruNumeric : null);
+      // 3. shortDetail / detail strings
+      if (thru === null) thru = parseThruStr(detail);
+      // 4. comp.status.period (competitor-level may encode hole-within-round)
+      if (thru === null && typeof compPeriod === 'number' && compPeriod > 0 && compPeriod <= 18
+          && compStatusType !== 'STATUS_SCHEDULED' && compStatusType !== 'STATUS_DELAYED')
+        thru = compPeriod === 18 ? 'F' : compPeriod;
+
+      // 5. Linescore inference — the only reliable data when status fields are empty
+      //    linescores[i] = per-round score object; defined+non-blank → round i is complete
+      if (thru === null) {
+        const currentLS = linescores[completedRounds]; // linescore for the in-progress round
+        const hasCurrentScore = currentLS &&
+          ((currentLS.displayValue && currentLS.displayValue !== '--') ||
+           (typeof currentLS.value === 'number'));
+        if (hasCurrentScore) {
+          // Current round linescore is filled in → player FINISHED this round
+          thru = 'F';
+        } else if (completedRounds >= effectiveRound) {
+          // All expected rounds have real scores → done
+          thru = 'F';
+        }
+        // Otherwise player is mid-round with no hole info → thru stays null → shows "—"
+      }
+
+      golfer.thru = thru;
+      golfer.completedRounds = completedRounds; // store for display context
+
+      scores[golfer.name] = { r1: golfer.r1, r2: golfer.r2, r3: golfer.r3, r4: golfer.r4, cumToPar: golfer.cumToPar, thru: golfer.thru, status: golfer.status, completedRounds: golfer.completedRounds };
     });
     localStorage.setItem('mastersPool2026_scores', JSON.stringify(scores));
 
@@ -1800,6 +1866,7 @@ async function fetchESPN() {
       else ind.innerHTML = '<span class="live-dot" style="background:#f59e0b;"></span> Round ' + roundNum;
     }
 
+    updateEntriesClosedState();
     updateEntriesClosedState();
     renderLive();
     renderLeaderboard();
@@ -1869,8 +1936,23 @@ function renderLive() {
         ? '<span class="badge badge-cut" style="margin-left:6px;font-size:9px;">CUT</span>' : '';
 
       // Thru: stored on golfer during ESPN fetch (handles multiple API paths)
-      const thruStr = g.thru != null ? String(g.thru) : (settings.round ? `R${settings.round}` : '—');
-      
+      // Show thru hole if available; infer from completedRounds when hole number is unavailable
+      const completedR = typeof g.completedRounds === 'number' ? g.completedRounds : -1;
+      let thruStr;
+      if (g.thru != null) {
+        thruStr = String(g.thru);
+      } else if (g.status === 'cut' || g.status === 'wd') {
+        thruStr = 'F';
+      } else if (completedR > 0) {
+        // Has at least one completed round — currently in the next one, hole unknown
+        thruStr = `R${completedR + 1}*`;
+      } else if (completedR === 0 && settings.round > 0) {
+        // In R1 but hole position unknown from ESPN
+        thruStr = 'R1*';
+      } else {
+        thruStr = '—';
+      }
+
       const posLabel = posLabels[i];
       const posStyle = posLabel === '1' ? 'color:var(--gold);' : '';
 
@@ -2094,6 +2176,7 @@ function applyVenmoEverywhere() {
 }
 
 // ===== PICKS VISIBILITY TOGGLE =====
+
 
 function exportEntries() {
   const headers = ['Name','Email','Entry Name','Tiebreaker','Paid','Pool A1','Pool A2','Pool B1','Pool B2','Pool B3','Pool B4','Pool C1','Pool C2','Timestamp'];
