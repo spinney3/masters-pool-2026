@@ -417,6 +417,18 @@
   .insight-box { background: linear-gradient(135deg, rgba(201,168,76,0.08), rgba(45,106,79,0.12)); border: 1px solid rgba(201,168,76,0.25); border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; font-size: 14px; color: rgba(245,240,232,0.9); line-height: 1.6; }
   .insight-box strong { color: var(--gold); }
 
+  /* Live Report Card */
+  .live-insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .live-insight-card { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .lic-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray); margin-bottom: 2px; }
+  .lic-name { font-size: 15px; font-weight: 700; color: var(--gold-light); line-height: 1.2; }
+  .lic-score-row { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+  .lic-score { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1; }
+  .lic-thru { font-size: 11px; color: var(--gray); }
+  .lic-odds { font-size: 11px; color: var(--gray); margin-left: auto; }
+  .lic-sub { font-size: 12px; color: rgba(245,240,232,0.75); line-height: 1.4; margin-top: 2px; }
+  .lic-picked { font-size: 11px; color: var(--gray); margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px; }
+
   .stats-empty { text-align: center; padding: 80px 20px; color: var(--gray); }
   .stats-empty .icon { font-size: 56px; margin-bottom: 16px; }
 
@@ -1273,7 +1285,7 @@ function renderField() {
 
   tbody.innerHTML = rows.map((g,i) => {
     const badgeCls = g.pool === 'A' ? 'badge-a' : g.pool === 'B' ? 'badge-b' : 'badge-c';
-    const rd = (r) => r !== null && r !== undefined ? `<span class="${r<0?'score-under':r>0?'score-over':'score-even'}">${r>0?'+':''}${r}</span>` : '<span class="score-dash">—</span>';
+    const rd = (r) => fmtScore(r);
     const statusBadge = g.status === 'cut' ? '<span class="badge badge-cut" style="font-size:10px;">CUT</span>' : g.status === 'wd' ? '<span class="badge badge-cut" style="font-size:10px;">WD</span>' : '';
     const flag = g.flag || '🏳';
     const country = g.country || '—';
@@ -1631,15 +1643,24 @@ function normalizeName(name) {
     .replace(/\s+/g, ' ').trim();
 }
 
+// Strip amateur "(a)" or any parenthetical suffix for matching purposes
+function stripAmateur(n) { return n.replace(/\s*\([^)]*\)/g, '').trim(); }
+
 // Try to match an ESPN competitor name to our fieldData
 function matchGolfer(espnName) {
   const norm = normalizeName(espnName);
-  // Exact match first
+  // 1. Exact match (handles pros whose field name has no suffix)
   let match = fieldData.find(g => normalizeName(g.name) === norm);
   if (match) return match;
-  // Last name match as fallback
+  // 2. Match after stripping (a) from field data — ESPN sends "Ethan Fang", field has "Ethan Fang (a)"
+  match = fieldData.find(g => normalizeName(stripAmateur(g.name)) === norm);
+  if (match) return match;
+  // 3. Last-name fallback — strip (a) from field data last-name too
   const lastName = norm.split(' ').pop();
-  match = fieldData.find(g => normalizeName(g.name).split(' ').pop() === lastName);
+  match = fieldData.find(g => {
+    const cleanNorm = normalizeName(stripAmateur(g.name));
+    return cleanNorm.split(' ').pop() === lastName;
+  });
   return match || null;
 }
 
@@ -1654,31 +1675,41 @@ async function fetchESPN() {
   try {
     setEspnStatus('loading', 'Fetching…');
 
-    // Try the Masters-specific leaderboard endpoint first
+    // Primary: leaderboard endpoint — returns {events:[{competitions:[{competitors:[...]}]}]}
+    // This is the shape confirmed by diagnostic; status.displayValue = "Thru N" / "F" / ISO tee time
     let json = null;
     let mastersEvent = null;
+    let usedEndpoint = '';
 
     try {
       const res1 = await fetch(ESPN_URL, { cache: 'no-store' });
       if (res1.ok) {
         json = await res1.json();
-        // Leaderboard endpoint wraps data differently — check both shapes
-        mastersEvent = json.events?.[0] ||        // scoreboard shape
-                       (json.id ? json : null);   // leaderboard shape (event is root)
+        // Standard shape: events array
+        if (json.events?.[0]?.competitions?.[0]?.competitors?.length) {
+          mastersEvent = json.events[0];
+          usedEndpoint = 'leaderboard';
+        }
       }
     } catch(_) {}
 
-    // Fall back to date-scoped scoreboard if leaderboard didn't work
+    // Fallback: date-scoped scoreboard (different data shape — status.displayValue may be absent)
     if (!mastersEvent) {
-      const res2 = await fetch(ESPN_MASTERS_SCOREBOARD, { cache: 'no-store' });
-      if (!res2.ok) throw new Error('HTTP ' + res2.status);
-      json = await res2.json();
-      const events = json.events || [];
-      mastersEvent = events.find(e =>
-        e.name?.toLowerCase().includes('masters') ||
-        e.shortName?.toLowerCase().includes('masters')
-      );
+      try {
+        const res2 = await fetch(ESPN_MASTERS_SCOREBOARD, { cache: 'no-store' });
+        if (res2.ok) {
+          json = await res2.json();
+          const events = json.events || [];
+          mastersEvent = events.find(e =>
+            e.name?.toLowerCase().includes('masters') ||
+            e.shortName?.toLowerCase().includes('masters')
+          ) || events[0] || null;
+          if (mastersEvent) usedEndpoint = 'scoreboard';
+        }
+      } catch(_) {}
     }
+
+    console.log('[ESPN] endpoint used:', usedEndpoint, '| mastersEvent found:', !!mastersEvent);
 
     if (!mastersEvent) {
       setEspnStatus('error', 'Awaiting Masters data');
@@ -1751,9 +1782,6 @@ async function fetchESPN() {
 
     // Debug log — inspect in DevTools (F12 → Console) to diagnose thru / round issues
     console.log('[ESPN] status:', status, '| period:', roundNum, '| effectiveRound:', effectiveRound, '| competitors:', competitors.length);
-    // Dump FULL raw shape of first competitor so we can find the real field names
-    if (competitors[0]) console.log('[ESPN] FULL comp[0] keys:', Object.keys(competitors[0]),
-      '\n  raw:', JSON.stringify(competitors[0]).slice(0, 800));
 
     // Map ESPN data into our fieldData scores
     competitors.forEach(comp => {
@@ -1761,35 +1789,43 @@ async function fetchESPN() {
       const golfer = matchGolfer(espnName);
       if (!golfer) return;
 
-      const linescores = comp.linescores || [];
-      const compStatusName = comp.status?.type?.name || '';
-      const cut = compStatusName === 'STATUS_CUT' ||
-                  comp.status?.type?.description?.toLowerCase().includes('cut');
-      const wd  = compStatusName === 'STATUS_WD' ||
-                  comp.status?.type?.description?.toLowerCase().includes('withdrew');
+      // ESPN leaderboard structure (confirmed from live data):
+      //   comp.score = "-3" (plain string, NOT an object)
+      //   comp.linescores[i] = { value: 69, displayValue: "-3", period: 1,
+      //     linescores: [ { value: 4, period: 1, scoreType: { displayValue: "E" } }, ... ] }
+      //   comp.status = undefined (does not exist in this API shape)
+      // Thru is derived by counting nested hole-level linescores.
 
-      // Count completed rounds (linescores with a displayValue that isn't "--")
-      const completedRounds = linescores.filter(l =>
-        l.displayValue && l.displayValue !== '--' && l.displayValue !== ''
+      const linescores = comp.linescores || [];
+
+      // Cut/WD: comp.status doesn't exist; ESPN may surface status in comp.score string or statistics
+      const scoreRaw = typeof comp.score === 'string' ? comp.score.toUpperCase() : '';
+      const cut = scoreRaw === 'CUT' || scoreRaw.includes('CUT');
+      const wd  = scoreRaw === 'WD'  || scoreRaw.includes('WD');
+
+      // completedRounds: rounds where all 18 holes have been played (nested linescores.length === 18)
+      const completedRounds = linescores.filter(ls =>
+        Array.isArray(ls.linescores) && ls.linescores.length === 18
       ).length;
 
-      // Cumulative to-par: prefer displayValue string over numeric value
-      // displayValue is what ESPN shows on their leaderboard ("E", "-5", "+2")
-      const cumToPar = parseDisplayVal(comp.score?.displayValue, completedRounds);
+      // roundsWithData: rounds that have ANY hole data (includes in-progress)
+      const roundsWithData = linescores.filter(ls =>
+        Array.isArray(ls.linescores) && ls.linescores.length > 0
+      ).length;
 
-      // Per-round to-par from linescores (for R1/R2/R3/R4 columns)
-      // Only use a linescore if it has a non-blank displayValue (i.e., round is complete or in-progress with a score)
+      // Cumulative to-par: comp.score is a plain string like "-3" or "E"
+      const scoreStr = typeof comp.score === 'string' ? comp.score : (comp.score?.displayValue || '');
+      const cumToPar = parseDisplayVal(scoreStr, Math.max(1, roundsWithData));
+
+      // Per-round to-par from linescores (displayValue on the round object)
       const r = (i) => {
         const ls = linescores[i];
         if (!ls) return null;
-        // Prefer displayValue; fall back to value
         if (ls.displayValue && ls.displayValue !== '--') {
           return parseDisplayVal(ls.displayValue, 1);
         }
-        const val = ls.value;
-        if (typeof val !== 'number') return null;
-        if (val > 55 && val < 90) return val - par;
-        if (val >= -15 && val <= 15 && val !== 0) return val;
+        // Fallback: stroke total → convert to-par
+        if (typeof ls.value === 'number' && ls.value > 55 && ls.value < 90) return ls.value - par;
         return null;
       };
 
@@ -1797,59 +1833,25 @@ async function fetchESPN() {
       golfer.cumToPar = cumToPar;
       golfer.status = wd ? 'wd' : cut ? 'cut' : 'active';
 
-      // Thru: ESPN status fields are absent in this API shape — derive from linescores instead.
-      // Priorities: status fields (if present) → linescore-based inference
-      const statusDV    = comp.status?.displayValue || '';
-      const thruNumeric = comp.status?.thru;
-      const compPeriod  = comp.status?.period;
-      const compStatusType = comp.status?.type?.name || '';
-      const detail      = comp.status?.type?.shortDetail || comp.status?.type?.detail || '';
+      // Thru: count nested hole linescores in the current in-progress round
       let thru = null;
-
-      // Helper: parse "Thru N" / "F" / bare number from a string
-      const parseThruStr = (s) => {
-        if (!s) return null;
-        const t = String(s).trim();
-        if (/^F$/i.test(t) || /^F\s/i.test(t)) return 'F';
-        const m = t.match(/thru\s+(\d+)/i);
-        if (m) return parseInt(m[1]);
-        if (/^\d+$/.test(t)) { const n = parseInt(t); if (n > 0 && n <= 18) return n; }
-        return null;
-      };
-
-      // 1. status.displayValue — "Thru 7", "F", "* -4 Thru 7"
-      thru = parseThruStr(statusDV);
-      // 2. numeric status.thru field
-      if (thru === null && typeof thruNumeric === 'number')
-        thru = thruNumeric === 18 ? 'F' : (thruNumeric > 0 ? thruNumeric : null);
-      // 3. shortDetail / detail strings
-      if (thru === null) thru = parseThruStr(detail);
-      // 4. comp.status.period (competitor-level may encode hole-within-round)
-      if (thru === null && typeof compPeriod === 'number' && compPeriod > 0 && compPeriod <= 18
-          && compStatusType !== 'STATUS_SCHEDULED' && compStatusType !== 'STATUS_DELAYED')
-        thru = compPeriod === 18 ? 'F' : compPeriod;
-
-      // 5. Linescore inference — the only reliable data when status fields are empty
-      //    linescores[i] = per-round score object; defined+non-blank → round i is complete
-      if (thru === null) {
-        const currentLS = linescores[completedRounds]; // linescore for the in-progress round
-        const hasCurrentScore = currentLS &&
-          ((currentLS.displayValue && currentLS.displayValue !== '--') ||
-           (typeof currentLS.value === 'number'));
-        if (hasCurrentScore) {
-          // Current round linescore is filled in → player FINISHED this round
-          thru = 'F';
-        } else if (completedRounds >= effectiveRound) {
-          // All expected rounds have real scores → done
-          thru = 'F';
-        }
-        // Otherwise player is mid-round with no hole info → thru stays null → shows "—"
+      const inProgLS = linescores.find(ls =>
+        Array.isArray(ls.linescores) && ls.linescores.length > 0 && ls.linescores.length < 18
+      );
+      if (inProgLS) {
+        // Player is actively playing — thru = number of holes completed so far
+        thru = inProgLS.linescores.length;
+      } else if (roundsWithData > 0 && completedRounds === roundsWithData) {
+        // All rounds that have data have exactly 18 holes → player finished their round
+        thru = 'F';
       }
+      // else: no hole data at all → player hasn't teed off → thru stays null → shows "—"
 
       golfer.thru = thru;
-      golfer.completedRounds = completedRounds; // store for display context
+      golfer.completedRounds = completedRounds;
+      golfer.teeTime = null; // tee time not available in this ESPN data shape
 
-      scores[golfer.name] = { r1: golfer.r1, r2: golfer.r2, r3: golfer.r3, r4: golfer.r4, cumToPar: golfer.cumToPar, thru: golfer.thru, status: golfer.status, completedRounds: golfer.completedRounds };
+      scores[golfer.name] = { r1: golfer.r1, r2: golfer.r2, r3: golfer.r3, r4: golfer.r4, cumToPar: golfer.cumToPar, thru: golfer.thru, teeTime: golfer.teeTime, status: golfer.status, completedRounds: golfer.completedRounds };
     });
     localStorage.setItem('mastersPool2026_scores', JSON.stringify(scores));
 
@@ -1870,6 +1872,8 @@ async function fetchESPN() {
     updateEntriesClosedState();
     renderLive();
     renderLeaderboard();
+    // Re-render stats if that tab is open so Live Report Card stays current
+    if (document.getElementById('tab-stats')?.classList.contains('active')) renderStats();
 
   } catch (err) {
     console.warn('ESPN fetch error:', err);
@@ -1936,19 +1940,17 @@ function renderLive() {
         ? '<span class="badge badge-cut" style="margin-left:6px;font-size:9px;">CUT</span>' : '';
 
       // Thru: stored on golfer during ESPN fetch (handles multiple API paths)
-      // Show thru hole if available; infer from completedRounds when hole number is unavailable
+      // Show thru hole if available; tee time for not-yet-started; "—" otherwise
       const completedR = typeof g.completedRounds === 'number' ? g.completedRounds : -1;
       let thruStr;
       if (g.thru != null) {
-        thruStr = String(g.thru);
+        thruStr = String(g.thru);              // "7", "F", "18"
       } else if (g.status === 'cut' || g.status === 'wd') {
         thruStr = 'F';
+      } else if (g.teeTime) {
+        thruStr = g.teeTime;                   // "1:44 PM" — not yet started
       } else if (completedR > 0) {
-        // Has at least one completed round — currently in the next one, hole unknown
-        thruStr = `R${completedR + 1}*`;
-      } else if (completedR === 0 && settings.round > 0) {
-        // In R1 but hole position unknown from ESPN
-        thruStr = 'R1*';
+        thruStr = `R${completedR + 1}*`;       // in next round, hole unknown
       } else {
         thruStr = '—';
       }
@@ -2360,6 +2362,154 @@ function renderStats() {
     insights.push(`<strong>${entryPopScore[0].name}</strong> has the most consensus-heavy entry (fewest unique picks), while <strong>${entryContrarianScore[0].name}</strong> is the biggest contrarian.`);
   }
 
+  // ---- Live performance analysis (only when tournament is active) ----
+  let liveInsightsHtml = '';
+  if (picksVisible()) {
+    const fmtS = (v) => v === null || v === undefined ? '—' : v === 0 ? 'E' : (v > 0 ? '+' : '') + v;
+    const colorCls = (v) => v === null || v === undefined ? '' : v < 0 ? 'score-under' : v > 0 ? 'score-over' : 'score-even';
+
+    // Active (non-cut, non-WD) golfers with score data
+    const activeSc = fieldData.filter(g => g.cumToPar !== null && g.cumToPar !== undefined && g.status === 'active');
+    const sortedByScore = [...activeSc].sort((a,b) => a.cumToPar - b.cumToPar);
+
+    // Rank map: golfer name → leaderboard position (among active)
+    const rankMap = {};
+    sortedByScore.forEach((g,i) => { rankMap[g.name] = i + 1; });
+    const rankLabel = (name) => { const r = rankMap[name]; return r ? (r === 1 ? 'T1' : `T${r}`) : '—'; };
+
+    // Helper: card for a golfer spotlight
+    const golferCard = (emoji, heading, name, subtext, score, thru) => {
+      const g = fieldData.find(f => f.name === name);
+      const pickedBy = pickCount[name] || 0;
+      const pctPicked = pct(pickedBy);
+      const thruStr = thru === 'F' ? 'F' : thru != null ? `Thru ${thru}` : '';
+      return `<div class="live-insight-card">
+        <div class="lic-header">${emoji} ${heading}</div>
+        <div class="lic-name">${name}</div>
+        <div class="lic-score-row">
+          <span class="lic-score ${colorCls(score)}">${fmtS(score)}</span>
+          ${thruStr ? `<span class="lic-thru">${thruStr}</span>` : ''}
+          <span class="lic-odds">${g?.odds || ''}</span>
+        </div>
+        <div class="lic-sub">${subtext}</div>
+        <div class="lic-picked">Picked by ${pickedBy} entr${pickedBy===1?'y':'ies'} (${pctPicked}%)</div>
+      </div>`;
+    };
+
+    // 1. People's Champion: most-picked golfer, how they're doing
+    const champName = mostPicked[0]?.[0];
+    const champG = champName ? fieldData.find(g => g.name === champName) : null;
+
+    // 2. Star performer: best score among top-10 most picked
+    const top10Names = mostPicked.slice(0,10).map(([n])=>n);
+    const top10Active = top10Names.map(n => fieldData.find(g=>g.name===n)).filter(g => g && g.cumToPar !== null && g.status === 'active');
+    const starPerformer = [...top10Active].sort((a,b)=>a.cumToPar-b.cumToPar)[0];
+
+    // 3. Crowd bust: worst score among top-10 most picked (with meaningful gap from star)
+    const bustG = [...top10Active].sort((a,b)=>b.cumToPar-a.cumToPar)[0];
+
+    // 4. Contrarian hero: picked by ≤ 2 entries but in top 20% by score
+    const top20pct = Math.ceil(sortedByScore.length * 0.2);
+    const topScorers = sortedByScore.slice(0, Math.max(top20pct, 10));
+    const contHero = topScorers.find(g => (pickCount[g.name]||0) >= 1 && (pickCount[g.name]||0) <= 2);
+
+    // 5. Longshot paying off: Pool C golfer with best score (ignore those with 999/cut)
+    const bestLongshot = [...fieldData].filter(g=>g.pool==='C'&&g.cumToPar!==null&&g.status==='active').sort((a,b)=>a.cumToPar-b.cumToPar)[0];
+
+    // 6. Pool tier avg scores
+    const tierAvg = ['A','B','C'].map(pool => {
+      const pg = fieldData.filter(g=>g.pool===pool&&g.cumToPar!==null&&g.status==='active');
+      const avg = pg.length ? +(pg.reduce((s,g)=>s+g.cumToPar,0)/pg.length).toFixed(1) : null;
+      return {pool, avg, count: pg.length};
+    });
+    const bestTier = [...tierAvg].filter(t=>t.avg!==null).sort((a,b)=>a.avg-b.avg)[0];
+
+    // 7. Highest-owned golfer NOT in top half of leaderboard ("the trap pick")
+    const halfField = Math.ceil(sortedByScore.length / 2);
+    const bottomHalf = sortedByScore.slice(halfField).map(g=>g.name);
+    const trapPick = mostPicked.slice(0,6).find(([n])=>bottomHalf.includes(n));
+
+    // 8. Who in the pool benefits most from the current leaderboard?
+    const entryImpact = entries.map(e => {
+      const sc = calcEntryScore(e);
+      return {name: e.nickname || e.name, total: sc.total};
+    }).sort((a,b)=>a.total-b.total);
+
+    // Build cards
+    const cards = [];
+
+    if (champG && champG.cumToPar !== null) {
+      const champRank = rankMap[champName];
+      const emoji = champG.cumToPar <= 0 ? '👑' : '😬';
+      const verdict = champG.cumToPar < -3 ? 'Delivering in style!' : champG.cumToPar <= 0 ? 'Holding their own.' : 'Struggling so far.';
+      cards.push(golferCard(emoji, "People's Champion", champName,
+        `${rankLabel(champName)} on the leaderboard — ${verdict}`,
+        champG.cumToPar, champG.thru));
+    }
+
+    if (starPerformer && starPerformer !== champG) {
+      cards.push(golferCard('⭐', 'Popular & Hot', starPerformer.name,
+        `Most popular picks — best score among the top 10 most-chosen`,
+        starPerformer.cumToPar, starPerformer.thru));
+    }
+
+    if (contHero) {
+      const heroRank = rankMap[contHero.name];
+      cards.push(golferCard('🦄', 'Contrarian Hero', contHero.name,
+        `Only ${pickCount[contHero.name]} entr${pickCount[contHero.name]===1?'y':'ies'} backed this pick — sitting ${rankLabel(contHero.name)} on the board`,
+        contHero.cumToPar, contHero.thru));
+    }
+
+    if (bestLongshot && (pickCount[bestLongshot.name]||0) > 0) {
+      cards.push(golferCard('🚀', 'Longshot Alert', bestLongshot.name,
+        `Pool C odds ${bestLongshot.odds} — outperforming expectations`,
+        bestLongshot.cumToPar, bestLongshot.thru));
+    }
+
+    if (bustG && bustG !== champG && bustG.cumToPar > 0) {
+      cards.push(golferCard('💸', 'Crowd Bust', bustG.name,
+        `Highly picked but currently outside the top half of the field`,
+        bustG.cumToPar, bustG.thru));
+    }
+
+    if (trapPick) {
+      const [trapName] = trapPick;
+      const trapG = fieldData.find(g=>g.name===trapName);
+      if (trapG && trapG.cumToPar !== null) {
+        cards.push(golferCard('🪤', 'The Trap Pick', trapName,
+          `${pct(pickCount[trapName]||0)}% of entries chose them — but they're outside the top half so far`,
+          trapG.cumToPar, trapG.thru));
+      }
+    }
+
+    // Tier performance bar
+    const tierHtml = tierAvg.every(t=>t.avg===null) ? '' : `
+      <div class="stats-card" style="margin-top:0;">
+        <div class="stats-card-title"><span class="icon">📐</span> Pool Tier Avg Score (Active Players)</div>
+        ${tierAvg.map(({pool, avg, count}) => {
+          const label = pool==='A'?'Pool A — Favorites':pool==='B'?'Pool B — Mid-Tier':'Pool C — Longshots';
+          const cls = colorCls(avg);
+          const best = bestTier && bestTier.pool === pool;
+          return `<div class="bar-row" style="${best?'background:rgba(201,168,76,0.08);border-radius:6px;padding:4px 6px;':''}">
+            <div class="bar-label">
+              <span class="bar-name">${label}${best?' 🏆':''}</span>
+              <span class="bar-val ${cls}">${avg!==null?fmtS(avg):'—'} avg &nbsp;<span style="color:var(--gray);font-size:11px;">(${count} active)</span></span>
+            </div>
+            <div class="bar-track"><div class="bar-fill ${pool==='A'?'bar-fill-gold':pool==='B'?'bar-fill-green':'bar-fill-blue'}" style="width:${avg!==null?Math.min(100,Math.round(Math.abs(avg)/12*100))+'%':'10%'};opacity:${avg!==null&&avg<0?1:0.35};"></div></div>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    if (cards.length > 0 || tierHtml) {
+      liveInsightsHtml = `
+      <div style="margin-bottom:24px;">
+        <div class="stats-card-title" style="margin-bottom:14px;font-size:16px;"><span class="icon">🔴</span> Live Report Card</div>
+        ${cards.length > 0 ? `<div class="live-insight-grid">${cards.join('')}</div>` : ''}
+        ${tierHtml}
+      </div>`;
+    }
+  }
+
   // ---- BUILD HTML ----
   el.innerHTML = `
 
@@ -2379,6 +2529,9 @@ function renderStats() {
       <div class="stats-card-title" style="margin-bottom:12px;"><span class="icon">💡</span> Key Insights</div>
       ${insights.map(i => `<div class="insight-box">${i}</div>`).join('')}
     </div>` : ''}
+
+    <!-- LIVE REPORT CARD -->
+    ${liveInsightsHtml}
 
     <!-- MAIN GRID -->
     <div class="stats-grid">
