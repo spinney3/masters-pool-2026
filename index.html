@@ -129,6 +129,7 @@
   }
   .sb-grid-entry { grid-template-columns: 44px 1fr 80px 1fr; }
   .sb-grid-golfer { grid-template-columns: 44px 1fr 80px 60px 60px 60px 60px 60px; }
+  .sb-pool-grid { display: grid; grid-template-columns: 34px 44px 1fr 80px 1fr; gap: 10px; align-items: center; }
 
   .sb-row {
     display: grid; gap: 10px; padding: 12px;
@@ -198,7 +199,8 @@
   .venmo-btn:hover { background: #006bd6; }
 
   /* ===== GOLFER BOARD ===== */
-  .odds-table { width: 100%; border-collapse: collapse; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .odds-table { width: 100%; border-collapse: collapse; min-width: 480px; }
   .odds-table th { padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); border-bottom: 1px solid var(--border); font-weight: 700; }
   .odds-table td { padding: 11px 12px; font-size: 14px; border-bottom: 1px solid rgba(201,168,76,0.06); vertical-align: middle; }
   .odds-table tr:hover td { background: rgba(201,168,76,0.04); }
@@ -329,12 +331,70 @@
   .espn-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.4s infinite; }
 
   /* ===== RESPONSIVE ===== */
+  /* ── Mobile & Tablet ─────────────────────────────────── */
   @media (max-width: 700px) {
-    .sb-grid-entry { grid-template-columns: 36px 1fr 65px 1fr; }
+    /* Navigation — horizontal scroll instead of wrap */
+    .nav { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
+           -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 8px; }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav-btn { padding: 10px 11px; font-size: 11px; letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0; }
+
+    /* Header */
+    .site-header { padding: 14px 12px 12px; }
+    .header-flag { font-size: 10px; letter-spacing: 1px; }
+    .header-dates { font-size: 11px; }
+
+    /* Layout */
+    .container { padding: 16px 10px; }
+    .section-title { font-size: 20px; }
+    .stats-strip { gap: 8px; padding: 10px 0; }
+
+    /* Pool leaderboard grid — 5 cols with pin btn */
+    .sb-pool-grid { grid-template-columns: 28px 36px 1fr 56px 1fr; gap: 6px; }
+    .sb-grid-entry { grid-template-columns: 28px 36px 1fr 56px 1fr; gap: 6px; }
+    .sb-row { padding: 10px 8px; }
+    .pos-cell { font-size: 17px; }
+    .entry-name { font-size: 14px; }
+    .score-cell { font-size: 13px; }
+
+    /* Live scores / field table */
     .sb-grid-golfer { grid-template-columns: 36px 1fr 60px 60px 60px 60px; }
+    .odds-table th { padding: 8px 5px; font-size: 10px; letter-spacing: 0.5px; }
+    .odds-table td { padding: 9px 5px; font-size: 12px; }
+
+    /* Forms / grids */
     .pool-summary { grid-template-columns: 1fr; }
     .pool-picker { grid-template-columns: 1fr; }
     .admin-grid { grid-template-columns: 1fr; }
+
+    /* Stats strip */
+    .stat-item .stat-num { font-size: 20px; }
+    .stat-item .stat-lbl { font-size: 10px; }
+
+    /* Pin search dropdown */
+    #pinDropdown { max-height: 60vh; overflow-y: auto; }
+
+    /* Misc section spacing */
+    .section-title { margin-bottom: 2px; }
+    .live-insight-grid { grid-template-columns: 1fr 1fr !important; }
+  }
+
+  /* ── Small phones (≤ 480px) ──────────────────────────── */
+  @media (max-width: 480px) {
+    .nav-btn { padding: 9px 9px; font-size: 10px; }
+    .header-title { font-size: clamp(22px, 8vw, 40px) !important; }
+    .header-dates { display: none; }
+    .container { padding: 12px 8px; }
+    .sb-pool-grid { grid-template-columns: 26px 32px 1fr 50px 1fr; gap: 5px; }
+    .sb-grid-entry { grid-template-columns: 26px 32px 1fr 50px 1fr; gap: 5px; }
+    .sb-row { padding: 8px 6px; }
+    .entry-name { font-size: 13px; }
+    .entry-meta { font-size: 10px; }
+    .golfer-chip { font-size: 9px; padding: 2px 4px; }
+    .pos-cell { font-size: 15px; }
+    /* Live scores: tighten up */
+    .odds-table th { padding: 6px 4px; font-size: 9px; }
+    .odds-table td { padding: 7px 4px; font-size: 11px; }
   }
 
   /* ===== STATS STRIP ===== */
@@ -707,7 +767,7 @@
           <span class="refresh-info" id="oddsUpdated">FanDuel odds · April 9, 2026</span>
         </div>
       </div>
-      <table class="odds-table" id="fieldTable">
+      <div class="table-scroll"><table class="odds-table" id="fieldTable">
         <thead>
           <tr>
             <th>#</th>
@@ -720,7 +780,7 @@
           </tr>
         </thead>
         <tbody id="fieldBody"></tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 </div>
@@ -1670,8 +1730,8 @@ function renderLeaderboard() {
       style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 2px;opacity:${isPinned ? '1' : '0.3'};transition:opacity 0.15s;"
       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${isPinned ? '1' : '0.3'}'">${isPinned ? '⭐' : '☆'}</button>`;
 
-    return `<div class="sb-row ${isLeader ? 'leader' : ''} ${isPinned ? 'pinned-row' : ''}"
-        style="display:grid;grid-template-columns:34px 44px 1fr 80px 1fr;gap:10px;align-items:center;${isPinned ? 'background:rgba(201,168,76,0.07);' : ''}">
+    return `<div class="sb-row sb-pool-grid ${isLeader ? 'leader' : ''} ${isPinned ? 'pinned-row' : ''}"
+        style="${isPinned ? 'background:rgba(201,168,76,0.07);' : ''}">
       <div style="text-align:center;">${pinBtn}</div>
       <div class="pos-cell ${posClass}">${e.eliminated ? '<span style="color:var(--red);font-size:13px;">ELIM</span>' : e.pos}</div>
       <div>
@@ -1684,7 +1744,7 @@ function renderLeaderboard() {
   };
 
   const pinnedSection = pinnedRows.length === 0 ? '' : `
-    <div style="display:grid;grid-template-columns:34px 44px 1fr 80px 1fr;gap:10px;padding:6px 12px 4px;background:rgba(201,168,76,0.1);border-bottom:1px solid rgba(201,168,76,0.25);">
+    <div class="sb-pool-grid" style="padding:6px 12px 4px;background:rgba(201,168,76,0.1);border-bottom:1px solid rgba(201,168,76,0.25);">
       <span></span><span></span>
       <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);">⭐ Pinned</span>
       <span></span><span></span>
@@ -1698,7 +1758,7 @@ function renderLeaderboard() {
         <span class="masters-board-title">Pool Standings</span>
         <span class="refresh-info">${settings.status === 'pre' ? 'Pre-Tournament' : 'Round ' + settings.round}</span>
       </div>
-      <div class="scoreboard-header sb-grid-entry" style="display:grid;grid-template-columns:34px 44px 1fr 80px 1fr;gap:10px;">
+      <div class="scoreboard-header sb-pool-grid">
         <span></span><span>POS</span><span>ENTRY</span><span>SCORE</span><span>PICKS</span>
       </div>
       ${pinnedSection}
@@ -2164,7 +2224,7 @@ function renderLive() {
     return String(livePosCounter);
   });
 
-  el.innerHTML = `<table class="odds-table" style="width:100%;">
+  el.innerHTML = `<div class="table-scroll"><table class="odds-table" style="width:100%;">
     <thead><tr>
       <th>POS</th><th>GOLFER</th><th>TOTAL</th>
       <th>R1</th><th>R2</th><th>R3</th><th>R4</th>
@@ -2209,7 +2269,7 @@ function renderLive() {
         <td><span class="badge ${badgeCls}">${g.pool}</span></td>
       </tr>`;
     }).join('')}</tbody>
-  </table>`;
+  </table></div>`;
 }
 
 // ===== AUTO REFRESH =====
