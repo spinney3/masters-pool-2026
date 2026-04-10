@@ -532,6 +532,23 @@
     </div>
 
     <div id="sheetStatusBar" class="sheet-status-bar"></div>
+
+    <!-- PIN SEARCH BOX -->
+    <div style="position:relative;margin-bottom:14px;" id="pinSearchWrap">
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(10,21,16,0.7);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+        <span style="font-size:16px;">⭐</span>
+        <input id="pinSearchInput" type="text" placeholder="Search entries to pin to top…"
+          autocomplete="off"
+          style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:inherit;"
+          oninput="renderPinDropdown(this.value)"
+          onfocus="renderPinDropdown(this.value)"
+          onblur="setTimeout(()=>{ const d=document.getElementById('pinDropdown'); if(d) d.style.display='none'; }, 180)"
+        />
+        <span id="pinCount" style="font-size:11px;color:var(--gold);display:none;"></span>
+      </div>
+      <div id="pinDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0d1f16;border:1px solid var(--border);border-radius:8px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
+    </div>
+
     <div id="leaderboardContent">
       <div class="no-entries">
         <div class="icon">⛳</div>
@@ -1074,6 +1091,55 @@ GOLFERS.forEach(g => { if(!seen.has(g.name)){seen.add(g.name);fieldData.push({..
 
 let entries = JSON.parse(localStorage.getItem('mastersPool2026_entries') || '[]');
 let settings = JSON.parse(localStorage.getItem('mastersPool2026_settings') || '{"round":0,"status":"pre"}');
+let pinnedEntries = new Set(JSON.parse(localStorage.getItem('mastersPool2026_pinned') || '[]'));
+
+function savePinned() {
+  localStorage.setItem('mastersPool2026_pinned', JSON.stringify([...pinnedEntries]));
+}
+function togglePin(entryKey) {
+  if (pinnedEntries.has(entryKey)) pinnedEntries.delete(entryKey);
+  else pinnedEntries.add(entryKey);
+  savePinned();
+  renderLeaderboard();
+}
+// Entry key: unique identifier combining name + email to handle duplicate names
+function entryKey(e) { return `${e.name}||${e.email}`; }
+
+function renderPinDropdown(query) {
+  const dd = document.getElementById('pinDropdown');
+  if (!dd) return;
+  const q = (query || '').trim().toLowerCase();
+  // Show all entries when box is focused with empty query; filter otherwise
+  const matches = entries.filter(e => {
+    const label = String(e.nickname || e.name || '').toLowerCase();
+    return !q || label.includes(q) || String(e.name || '').toLowerCase().includes(q);
+  });
+  if (matches.length === 0) { dd.style.display = 'none'; return; }
+  dd.innerHTML = matches.map(e => {
+    const key = entryKey(e);
+    const isPinned = pinnedEntries.has(key);
+    const label = e.nickname || e.name;
+    return `<div onclick="togglePin(decodeURIComponent('${encodeURIComponent(key)}'));document.getElementById('pinSearchInput').value='';renderPinDropdown('');"
+      style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;"
+      onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background=''"
+    >
+      <span style="font-size:13px;color:var(--text);">${label}<span style="color:var(--gray);font-size:11px;margin-left:6px;">${e.name !== label ? '· ' + e.name : ''}</span></span>
+      <span style="font-size:15px;">${isPinned ? '⭐' : '☆'}</span>
+    </div>`;
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function updatePinCount() {
+  const el = document.getElementById('pinCount');
+  if (!el) return;
+  if (pinnedEntries.size > 0) {
+    el.textContent = `${pinnedEntries.size} pinned`;
+    el.style.display = 'inline';
+  } else {
+    el.style.display = 'none';
+  }
+}
 let scores = JSON.parse(localStorage.getItem('mastersPool2026_scores') || '{}');
 let pendingEntry = null;
 let adminUnlocked = false;
@@ -1574,49 +1640,69 @@ function renderLeaderboard() {
     }
   });
 
+  // Split into pinned (preserving leaderboard order) and the rest
+  const pinnedRows   = scored.filter(e => pinnedEntries.has(entryKey(e)));
+  const unpinnedRows = scored.filter(e => !pinnedEntries.has(entryKey(e)));
+  updatePinCount();
+
+  const buildRow = (e, i, isLeader) => {
+    const key = entryKey(e);
+    const isPinned = pinnedEntries.has(key);
+    const posClass = e.pos === '1' ? 'top3' : '';
+    const scoreDisp = settings.status === 'pre' ? '<span class="score-dash">—</span>' : fmtScore(e.total);
+
+    const chips = !picksVisible()
+      ? '<span style="color:var(--gray);font-size:12px;font-style:italic;">Picks revealed when tournament begins</span>'
+      : [...e.golferScores]
+          .sort((a, b) => {
+            if (a.counting !== b.counting) return (b.counting ? 1 : 0) - (a.counting ? 1 : 0);
+            return a.score - b.score;
+          })
+          .map(g => {
+            const cls = g.status === 'cut' ? 'cut' : g.counting ? 'counting' : 'active';
+            const lastName = g.name.split(' ').slice(-1)[0];
+            const isActive = g.status !== 'cut' && g.status !== 'wd' && g.score !== 999;
+            const sc = isActive ? ` ${fmtScore(g.score)}` : '';
+            return `<span class="golfer-chip ${cls}">${lastName}${sc}</span>`;
+          }).join('');
+
+    const pinBtn = `<button onclick="togglePin(decodeURIComponent('${encodeURIComponent(key)}'))" title="${isPinned ? 'Unpin' : 'Pin to top'}"
+      style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 2px;opacity:${isPinned ? '1' : '0.3'};transition:opacity 0.15s;"
+      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${isPinned ? '1' : '0.3'}'">${isPinned ? '⭐' : '☆'}</button>`;
+
+    return `<div class="sb-row ${isLeader ? 'leader' : ''} ${isPinned ? 'pinned-row' : ''}"
+        style="display:grid;grid-template-columns:34px 44px 1fr 80px 1fr;gap:10px;align-items:center;${isPinned ? 'background:rgba(201,168,76,0.07);' : ''}">
+      <div style="text-align:center;">${pinBtn}</div>
+      <div class="pos-cell ${posClass}">${e.eliminated ? '<span style="color:var(--red);font-size:13px;">ELIM</span>' : e.pos}</div>
+      <div>
+        <div class="entry-name">${e.nickname || e.name}</div>
+        <div class="entry-meta">${e.name} · ${e.madeCut}/8 active · ${e.paid ? '✅ Paid' : '⏳ Awaiting payment'}</div>
+      </div>
+      <div class="score-cell">${scoreDisp}</div>
+      <div class="golfer-chips">${chips}</div>
+    </div>`;
+  };
+
+  const pinnedSection = pinnedRows.length === 0 ? '' : `
+    <div style="display:grid;grid-template-columns:34px 44px 1fr 80px 1fr;gap:10px;padding:6px 12px 4px;background:rgba(201,168,76,0.1);border-bottom:1px solid rgba(201,168,76,0.25);">
+      <span></span><span></span>
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);">⭐ Pinned</span>
+      <span></span><span></span>
+    </div>
+    ${pinnedRows.map((e, i) => buildRow(e, i, false)).join('')}
+    <div style="height:1px;background:rgba(201,168,76,0.25);margin:2px 0 2px;"></div>`;
+
   const html = `
     <div class="masters-board">
       <div class="masters-board-header">
         <span class="masters-board-title">Pool Standings</span>
         <span class="refresh-info">${settings.status === 'pre' ? 'Pre-Tournament' : 'Round ' + settings.round}</span>
       </div>
-      <div class="scoreboard-header sb-grid-entry" style="display:grid;">
-        <span>POS</span><span>ENTRY</span><span>SCORE</span><span>PICKS</span>
+      <div class="scoreboard-header sb-grid-entry" style="display:grid;grid-template-columns:34px 44px 1fr 80px 1fr;gap:10px;">
+        <span></span><span>POS</span><span>ENTRY</span><span>SCORE</span><span>PICKS</span>
       </div>
-      ${scored.map((e, i) => {
-        const isLeader = i === 0 && !e.eliminated;
-        const posClass = e.pos === '1' ? 'top3' : '';
-        const scoreDisp = settings.status === 'pre' ? '<span class="score-dash">—</span>' : fmtScore(e.total);
-
-        
-        const chips = !picksVisible()
-  ? '<span style="color:var(--gray);font-size:12px;font-style:italic;">Picks revealed when tournament begins</span>'
-  : [...e.golferScores]
-      // Counting (best 5) first, then non-counting; within each group sort best score first
-      .sort((a, b) => {
-        if (a.counting !== b.counting) return (b.counting ? 1 : 0) - (a.counting ? 1 : 0);
-        return a.score - b.score;
-      })
-      .map(g => {
-        const cls = g.status === 'cut' ? 'cut' : g.counting ? 'counting' : 'active';
-        const lastName = g.name.split(' ').slice(-1)[0];
-        // Show score for active/counting players; cut/wd get no score
-        const isActive = g.status !== 'cut' && g.status !== 'wd' && g.score !== 999;
-        const sc = isActive ? ` ${fmtScore(g.score)}` : '';
-        return `<span class="golfer-chip ${cls}">${lastName}${sc}</span>`;
-      }).join('');
-
-
-        return `<div class="sb-row ${isLeader ? 'leader' : ''}" style="display:grid;grid-template-columns:44px 1fr 80px 1fr;gap:10px;align-items:center;">
-          <div class="pos-cell ${posClass}">${e.eliminated ? '<span style="color:var(--red);font-size:13px;">ELIM</span>' : e.pos}</div>
-          <div>
-            <div class="entry-name">${e.nickname || e.name}</div>
-            <div class="entry-meta">${e.name} · ${e.madeCut}/8 active · ${e.paid ? '✅ Paid' : '⏳ Awaiting payment'}</div>
-          </div>
-          <div class="score-cell">${scoreDisp}</div>
-          <div class="golfer-chips">${chips}</div>
-        </div>`;
-      }).join('')}
+      ${pinnedSection}
+      ${unpinnedRows.map((e, i) => buildRow(e, i, i === 0 && !e.eliminated && pinnedRows.length === 0)).join('')}
     </div>`;
   container.innerHTML = html;
 }
@@ -1672,107 +1758,63 @@ async function fetchTeeTimes(eventId) {
   }
 
   // ── Attempt 1: Masters.com live scores feed ───────────────────────────────
-  // masters.com publishes a JSON scoring feed that includes per-player tee times
   try {
-    const mastersUrl = 'https://www.masters.com/en_US/scores/feeds/2026/scores.json';
-    console.log('[TeeTime] trying masters.com:', mastersUrl);
-    const r = await fetch(mastersUrl, { cache: 'no-store' });
-    console.log('[TeeTime] masters.com status:', r.status);
+    const r = await fetch('https://www.masters.com/en_US/scores/feeds/2026/scores.json', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      console.log('[TeeTime] masters.com top keys:', Object.keys(d));
-      // Try common shapes: d.data.player[], d.players[], d.Player[], d.leaderboard[]
       const players = d.data?.player || d.players || d.Player || d.leaderboard || [];
-      console.log('[TeeTime] masters.com players found:', players.length,
-        '| sample keys:', players[0] ? Object.keys(players[0]) : 'n/a');
       players.forEach(p => {
         const id  = String(p.id || p.PlayerId || p.player_id || '');
         const raw = p.teetime || p.TeeTime || p.tee_time || p.startTime || '';
         const tt  = parseTeeTimeValue(raw);
         if (!tt) return;
-        // Store by id and ALL available name variants so ESPN name-lookup has the best chance
         if (id) newTeeTimes[id] = tt;
         [p.full_name, p.display_name, p.display_name2, p.name].forEach(n => {
           if (n) newTeeTimes[n] = tt;
         });
       });
       if (Object.keys(newTeeTimes).length > 0) {
-        // Post-pass: add a normalized (lowercase, no diacritics) copy of every key
-        // so lookups like normalizeName("Ángel Cabrera") → "angel cabrera" always hit
+        // Post-pass: add normalized (lowercase, no diacritics) copy of every key
         Object.keys(newTeeTimes).forEach(k => {
           const norm = normalizeName(k);
           if (norm && !(norm in newTeeTimes)) newTeeTimes[norm] = newTeeTimes[k];
         });
-
-        // Log any active players from our field still missing from the tee-time cache
-        const missing = fieldData
-          .filter(g => g.status !== 'cut' && g.status !== 'wd')
-          .filter(g => {
-            const n = g.name.replace(/\s*\([^)]*\)/g, '').trim();
-            return !newTeeTimes[n] && !newTeeTimes[normalizeName(n)];
-          })
-          .map(g => g.name);
-        console.log('[TeeTime] masters.com loaded:', Object.keys(newTeeTimes).length,
-          '| still missing:', missing.join(', ') || 'none');
         espnTeeTimes = newTeeTimes;
         return;
       }
     }
-  } catch(e) { console.warn('[TeeTime] masters.com failed:', e.message); }
+  } catch(e) { /* masters.com unavailable — try next source */ }
 
   // ── Attempt 2: ESPN core API competitors endpoint ─────────────────────────
-  // sports.core.api.espn.com carries more detail than site.api, including startDate
   try {
     const coreUrl = `https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/${eventId}/competitions/${eventId}/competitors?limit=200`;
-    console.log('[TeeTime] trying ESPN core API:', coreUrl);
     const r = await fetch(coreUrl, { cache: 'no-store' });
-    console.log('[TeeTime] ESPN core status:', r.status);
     if (r.ok) {
       const d = await r.json();
-      console.log('[TeeTime] ESPN core top keys:', Object.keys(d),
-        '| items count:', d.items?.length, '| first item keys:', d.items?.[0] ? Object.keys(d.items[0]) : 'n/a');
-      const items = d.items || [];
-      items.forEach(item => {
-        // Core API items may be inline or just $ref links
-        if (item.$ref) return; // skip ref-only items
-        const name = item.athlete?.displayName || item.athlete?.fullName || '';
-        const id   = item.athlete?.id || item.id || '';
-        const raw  = item.startDate || item.teeTime || item.status?.type?.detail || '';
-        const tt   = parseTeeTimeValue(raw);
-        storeTeeTime(id, name, tt);
+      (d.items || []).forEach(item => {
+        if (item.$ref) return;
+        const raw = item.startDate || item.teeTime || item.status?.type?.detail || '';
+        const tt  = parseTeeTimeValue(raw);
+        storeTeeTime(item.athlete?.id || item.id, item.athlete?.displayName || '', tt);
       });
-      if (Object.keys(newTeeTimes).length > 0) {
-        console.log('[TeeTime] ESPN core loaded:', Object.keys(newTeeTimes).length,
-          '| sample:', Object.entries(newTeeTimes).slice(0,3).map(([k,v])=>`${k}→${v}`).join(', '));
-        espnTeeTimes = newTeeTimes;
-        return;
-      }
+      if (Object.keys(newTeeTimes).length > 0) { espnTeeTimes = newTeeTimes; return; }
     }
-  } catch(e) { console.warn('[TeeTime] ESPN core failed:', e.message); }
+  } catch(e) { /* ESPN core unavailable */ }
 
-  // ── Attempt 3: ESPN summary endpoint (may be 502 during tournament) ───────
+  // ── Attempt 3: ESPN summary endpoint ─────────────────────────────────────
   try {
-    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/summary?event=${eventId}`;
-    console.log('[TeeTime] trying ESPN summary:', summaryUrl);
-    const r = await fetch(summaryUrl, { cache: 'no-store' });
-    console.log('[TeeTime] ESPN summary status:', r.status);
+    const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/golf/pga/summary?event=${eventId}`, { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
       const comps = d.header?.competitions?.[0]?.competitors
         || d.competition?.competitors || d.competitions?.[0]?.competitors || [];
       comps.forEach(sc => {
         const detail = sc.status?.type?.detail || sc.status?.type?.shortDetail || '';
-        const tt = parseTeeTimeValue(detail);
-        storeTeeTime(sc.athlete?.id || sc.id, sc.athlete?.displayName || '', tt);
+        storeTeeTime(sc.athlete?.id || sc.id, sc.athlete?.displayName || '', parseTeeTimeValue(detail));
       });
-      if (Object.keys(newTeeTimes).length > 0) {
-        espnTeeTimes = newTeeTimes;
-        return;
-      }
+      if (Object.keys(newTeeTimes).length > 0) { espnTeeTimes = newTeeTimes; return; }
     }
-  } catch(e) { console.warn('[TeeTime] ESPN summary failed:', e.message); }
-
-  console.warn('[TeeTime] all tee time sources exhausted — no data found');
+  } catch(e) { /* ESPN summary unavailable */ }
 }
 
 // Name normalizer: strip suffixes, lowercase, handle common mismatches
@@ -2046,16 +2088,6 @@ async function fetchESPN() {
       golfer.teeTime = cachedTeeTime || teeTime;
 
       // Debug: log lookup details for the 4 problem players
-      const DEBUG_PLAYERS = ['Nicolas Echavarria','Angel Cabrera','Sami Valimaki','Johnny Keefer','John Keefer'];
-      if (DEBUG_PLAYERS.some(n => espnName.toLowerCase().includes(n.toLowerCase().split(' ')[1] || n.toLowerCase()))) {
-        console.log('[TeeTime debug]', espnName,
-          '\n  espnName:', JSON.stringify(espnName), '| normESPN:', normalizeName(espnName),
-          '\n  byId:', espnTeeTimes[athleteId],
-          '\n  byRaw:', espnTeeTimes[resolvedName],
-          '\n  byNorm:', espnTeeTimes[normalizeName(resolvedName)],
-          '\n  → teeTime:', golfer.teeTime,
-          '\n  cache keys with "valim/echavarr/cabrer/keefer":', Object.keys(espnTeeTimes).filter(k => /valim|echavarr|cabrer|keefer/i.test(k)));
-      }
 
       scores[golfer.name] = { r1: golfer.r1, r2: golfer.r2, r3: golfer.r3, r4: golfer.r4, cumToPar: golfer.cumToPar, thru: golfer.thru, teeTime: golfer.teeTime, status: golfer.status, completedRounds: golfer.completedRounds };
     });
