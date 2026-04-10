@@ -1630,6 +1630,151 @@ let espnRefreshTimer = null;
 let espnLastFetch = 0;
 let espnFetchFailed = false;
 
+// Tee time cache populated by the Masters.com feed (keyed by athlete id OR display name)
+let espnTeeTimes = {};
+
+// Manual name overrides: maps the ESPN display name → the name Masters.com uses.
+// Add entries here whenever a player's name differs between the two sources.
+const TEETIME_NAME_OVERRIDES = {
+  'Johnny Keefer': 'John Keefer',    // ESPN uses "Johnny", Masters.com uses "John"
+  'Nico Echavarria': 'Nicolas Echavarria', // ESPN uses "Nico", Masters.com uses "Nicolas"
+};
+
+// Parse a raw tee-time value into a clean "1:44 PM" string (handles HH:MM AM/PM strings and ISO dates)
+function parseTeeTimeValue(raw) {
+  if (!raw) return null;
+  const s = String(raw);
+  const ampm = s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+  if (ampm) return ampm[1];
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return null;
+}
+
+// Fetch tee times from the ESPN event summary endpoint, which carries per-competitor
+// tee times in competitor.status.type.detail (e.g. "1:44 PM ET") for scheduled players.
+async function fetchTeeTimes(eventId) {
+  if (!eventId) { console.warn('[ESPN] fetchTeeTimes: no eventId'); return; }
+
+  const newTeeTimes = {};
+
+  // Helper: store a tee time by both athlete id and display name
+  function storeTeeTime(id, name, tt) {
+    if (!tt) return;
+    if (id)   newTeeTimes[String(id)] = tt;
+    if (name) {
+      newTeeTimes[name] = tt;
+      // Also store under normalized form so diacritic differences never cause a miss
+      // e.g. Masters.com "Sami Välimäki" → normalized "sami valimaki" matches ESPN "Sami Valimaki"
+      const norm = normalizeName(name);
+      if (norm) newTeeTimes[norm] = tt;
+    }
+  }
+
+  // ── Attempt 1: Masters.com live scores feed ───────────────────────────────
+  // masters.com publishes a JSON scoring feed that includes per-player tee times
+  try {
+    const mastersUrl = 'https://www.masters.com/en_US/scores/feeds/2026/scores.json';
+    console.log('[TeeTime] trying masters.com:', mastersUrl);
+    const r = await fetch(mastersUrl, { cache: 'no-store' });
+    console.log('[TeeTime] masters.com status:', r.status);
+    if (r.ok) {
+      const d = await r.json();
+      console.log('[TeeTime] masters.com top keys:', Object.keys(d));
+      // Try common shapes: d.data.player[], d.players[], d.Player[], d.leaderboard[]
+      const players = d.data?.player || d.players || d.Player || d.leaderboard || [];
+      console.log('[TeeTime] masters.com players found:', players.length,
+        '| sample keys:', players[0] ? Object.keys(players[0]) : 'n/a');
+      players.forEach(p => {
+        const id  = String(p.id || p.PlayerId || p.player_id || '');
+        const raw = p.teetime || p.TeeTime || p.tee_time || p.startTime || '';
+        const tt  = parseTeeTimeValue(raw);
+        if (!tt) return;
+        // Store by id and ALL available name variants so ESPN name-lookup has the best chance
+        if (id) newTeeTimes[id] = tt;
+        [p.full_name, p.display_name, p.display_name2, p.name].forEach(n => {
+          if (n) newTeeTimes[n] = tt;
+        });
+      });
+      if (Object.keys(newTeeTimes).length > 0) {
+        // Post-pass: add a normalized (lowercase, no diacritics) copy of every key
+        // so lookups like normalizeName("Ángel Cabrera") → "angel cabrera" always hit
+        Object.keys(newTeeTimes).forEach(k => {
+          const norm = normalizeName(k);
+          if (norm && !(norm in newTeeTimes)) newTeeTimes[norm] = newTeeTimes[k];
+        });
+
+        // Log any active players from our field still missing from the tee-time cache
+        const missing = fieldData
+          .filter(g => g.status !== 'cut' && g.status !== 'wd')
+          .filter(g => {
+            const n = g.name.replace(/\s*\([^)]*\)/g, '').trim();
+            return !newTeeTimes[n] && !newTeeTimes[normalizeName(n)];
+          })
+          .map(g => g.name);
+        console.log('[TeeTime] masters.com loaded:', Object.keys(newTeeTimes).length,
+          '| still missing:', missing.join(', ') || 'none');
+        espnTeeTimes = newTeeTimes;
+        return;
+      }
+    }
+  } catch(e) { console.warn('[TeeTime] masters.com failed:', e.message); }
+
+  // ── Attempt 2: ESPN core API competitors endpoint ─────────────────────────
+  // sports.core.api.espn.com carries more detail than site.api, including startDate
+  try {
+    const coreUrl = `https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/${eventId}/competitions/${eventId}/competitors?limit=200`;
+    console.log('[TeeTime] trying ESPN core API:', coreUrl);
+    const r = await fetch(coreUrl, { cache: 'no-store' });
+    console.log('[TeeTime] ESPN core status:', r.status);
+    if (r.ok) {
+      const d = await r.json();
+      console.log('[TeeTime] ESPN core top keys:', Object.keys(d),
+        '| items count:', d.items?.length, '| first item keys:', d.items?.[0] ? Object.keys(d.items[0]) : 'n/a');
+      const items = d.items || [];
+      items.forEach(item => {
+        // Core API items may be inline or just $ref links
+        if (item.$ref) return; // skip ref-only items
+        const name = item.athlete?.displayName || item.athlete?.fullName || '';
+        const id   = item.athlete?.id || item.id || '';
+        const raw  = item.startDate || item.teeTime || item.status?.type?.detail || '';
+        const tt   = parseTeeTimeValue(raw);
+        storeTeeTime(id, name, tt);
+      });
+      if (Object.keys(newTeeTimes).length > 0) {
+        console.log('[TeeTime] ESPN core loaded:', Object.keys(newTeeTimes).length,
+          '| sample:', Object.entries(newTeeTimes).slice(0,3).map(([k,v])=>`${k}→${v}`).join(', '));
+        espnTeeTimes = newTeeTimes;
+        return;
+      }
+    }
+  } catch(e) { console.warn('[TeeTime] ESPN core failed:', e.message); }
+
+  // ── Attempt 3: ESPN summary endpoint (may be 502 during tournament) ───────
+  try {
+    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/summary?event=${eventId}`;
+    console.log('[TeeTime] trying ESPN summary:', summaryUrl);
+    const r = await fetch(summaryUrl, { cache: 'no-store' });
+    console.log('[TeeTime] ESPN summary status:', r.status);
+    if (r.ok) {
+      const d = await r.json();
+      const comps = d.header?.competitions?.[0]?.competitors
+        || d.competition?.competitors || d.competitions?.[0]?.competitors || [];
+      comps.forEach(sc => {
+        const detail = sc.status?.type?.detail || sc.status?.type?.shortDetail || '';
+        const tt = parseTeeTimeValue(detail);
+        storeTeeTime(sc.athlete?.id || sc.id, sc.athlete?.displayName || '', tt);
+      });
+      if (Object.keys(newTeeTimes).length > 0) {
+        espnTeeTimes = newTeeTimes;
+        return;
+      }
+    }
+  } catch(e) { console.warn('[TeeTime] ESPN summary failed:', e.message); }
+
+  console.warn('[TeeTime] all tee time sources exhausted — no data found');
+}
+
 // Name normalizer: strip suffixes, lowercase, handle common mismatches
 function normalizeName(name) {
   if (!name) return '';
@@ -1721,6 +1866,11 @@ async function fetchESPN() {
     espnData = mastersEvent;
     espnFetchFailed = false;
     espnLastFetch = Date.now();
+
+    // Fetch per-competitor tee times from the summary endpoint before processing competitors.
+    // The leaderboard endpoint has no tee time data; the summary endpoint does.
+    const eventId = mastersEvent.id || mastersEvent.competitions?.[0]?.id || '';
+    if (eventId) await fetchTeeTimes(eventId);
 
     // Parse competitors into our score format
     const competitors = mastersEvent.competitions?.[0]?.competitors || [];
@@ -1849,7 +1999,63 @@ async function fetchESPN() {
 
       golfer.thru = thru;
       golfer.completedRounds = completedRounds;
-      golfer.teeTime = null; // tee time not available in this ESPN data shape
+
+      // Try to extract upcoming tee time from ESPN competitor data.
+      // Try every known field path across leaderboard and scoreboard endpoint shapes.
+      let teeTime = null;
+
+      // Helper: parse a time string like "1:44 PM ET" or ISO "2026-04-11T13:44:00Z"
+      function parseTeeTimeStr(raw) {
+        if (!raw) return null;
+        const s = String(raw);
+        // Already a human-readable time e.g. "1:44 PM" / "1:44 PM ET"
+        const ampm = s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+        if (ampm) return ampm[1];
+        // ISO / epoch string — convert to local time
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+        return null;
+      }
+
+      // Candidate field paths to check (broadest possible net)
+      const teeTimeCandidates = [
+        comp.status?.type?.detail,
+        comp.status?.type?.shortDetail,
+        comp.status?.displayValue,
+        comp.teeTime,
+        comp.startDate,
+        comp.startTime,
+        comp.athlete?.teeTime,
+        comp.athlete?.startDate,
+      ];
+      for (const candidate of teeTimeCandidates) {
+        const parsed = parseTeeTimeStr(candidate);
+        if (parsed) { teeTime = parsed; break; }
+      }
+
+      // Use tee time from summary endpoint cache (keyed by athlete id or display name)
+      const athleteId = comp.athlete?.id || '';
+      // Resolve name: apply manual override first, then fall back to ESPN name
+      const resolvedName = TEETIME_NAME_OVERRIDES[espnName] || espnName;
+      const cachedTeeTime = (athleteId && espnTeeTimes[athleteId])
+        || espnTeeTimes[resolvedName]
+        || espnTeeTimes[normalizeName(resolvedName)]  // diacritic-insensitive fallback
+        || null;
+      golfer.teeTime = cachedTeeTime || teeTime;
+
+      // Debug: log lookup details for the 4 problem players
+      const DEBUG_PLAYERS = ['Nicolas Echavarria','Angel Cabrera','Sami Valimaki','Johnny Keefer','John Keefer'];
+      if (DEBUG_PLAYERS.some(n => espnName.toLowerCase().includes(n.toLowerCase().split(' ')[1] || n.toLowerCase()))) {
+        console.log('[TeeTime debug]', espnName,
+          '\n  espnName:', JSON.stringify(espnName), '| normESPN:', normalizeName(espnName),
+          '\n  byId:', espnTeeTimes[athleteId],
+          '\n  byRaw:', espnTeeTimes[resolvedName],
+          '\n  byNorm:', espnTeeTimes[normalizeName(resolvedName)],
+          '\n  → teeTime:', golfer.teeTime,
+          '\n  cache keys with "valim/echavarr/cabrer/keefer":', Object.keys(espnTeeTimes).filter(k => /valim|echavarr|cabrer|keefer/i.test(k)));
+      }
 
       scores[golfer.name] = { r1: golfer.r1, r2: golfer.r2, r3: golfer.r3, r4: golfer.r4, cumToPar: golfer.cumToPar, thru: golfer.thru, teeTime: golfer.teeTime, status: golfer.status, completedRounds: golfer.completedRounds };
     });
@@ -1942,8 +2148,12 @@ function renderLive() {
       // Thru: stored on golfer during ESPN fetch (handles multiple API paths)
       // Show thru hole if available; tee time for not-yet-started; "—" otherwise
       const completedR = typeof g.completedRounds === 'number' ? g.completedRounds : -1;
+      const currentRound = settings.round || 0;
       let thruStr;
-      if (g.thru != null) {
+      if (g.thru === 'F' && completedR >= 0 && completedR < currentRound) {
+        // Player finished a prior round but a new round has started — show their tee time
+        thruStr = g.teeTime || '—';
+      } else if (g.thru != null) {
         thruStr = String(g.thru);              // "7", "F", "18"
       } else if (g.status === 'cut' || g.status === 'wd') {
         thruStr = 'F';
@@ -2510,6 +2720,155 @@ function renderStats() {
     }
   }
 
+  // ---- PGA vs LIV Battle ----
+  let pgaLivHtml = '';
+  if (picksVisible()) {
+    const LIV_PLAYERS = new Set([
+      'Jon Rahm', 'Bryson DeChambeau', 'Patrick Reed', 'Brooks Koepka',
+      'Tyrrell Hatton', 'Cameron Smith', 'Dustin Johnson', 'Carlos Ortiz',
+      'Sergio Garcia', 'Bubba Watson', 'Charl Schwartzel'
+    ]);
+
+    const activePlayers = fieldData.filter(g => g.cumToPar !== null && g.status === 'active');
+    const livAllActive = activePlayers.filter(g =>  LIV_PLAYERS.has(g.name)).sort((a,b) => a.cumToPar - b.cumToPar);
+    const pgaAllActive = activePlayers.filter(g => !LIV_PLAYERS.has(g.name)).sort((a,b) => a.cumToPar - b.cumToPar);
+
+    // Use top 10 from each tour for a fair apples-to-apples comparison
+    const TOP_N = 10;
+    const livActive = livAllActive.slice(0, TOP_N);
+    const pgaActive = pgaAllActive.slice(0, TOP_N);
+
+    // Leaderboard rank among ALL active players (for position display)
+    const allSorted = [...activePlayers].sort((a,b) => a.cumToPar - b.cumToPar);
+    const rankOf = (name) => allSorted.findIndex(g => g.name === name) + 1;
+
+    const avg = (arr) => arr.length ? +(arr.reduce((s,g) => s + g.cumToPar, 0) / arr.length).toFixed(1) : null;
+    const pgaAvg = avg(pgaActive);
+    const livAvg = avg(livActive);
+
+    const fmtAvg = (v) => v === null ? '—' : v === 0 ? 'E' : (v > 0 ? '+' : '') + v;
+    const colorCls2 = (v) => v === null ? '' : v < 0 ? 'score-under' : v > 0 ? 'score-over' : 'score-even';
+
+    // Count in top 10 / top 20 of overall leaderboard
+    const top10names = allSorted.slice(0, 10).map(g => g.name);
+    const top20names = allSorted.slice(0, 20).map(g => g.name);
+    const livTop10 = top10names.filter(n => LIV_PLAYERS.has(n)).length;
+    const pgaTop10 = top10names.length - livTop10;
+    const livTop20 = top20names.filter(n => LIV_PLAYERS.has(n)).length;
+    const pgaTop20 = top20names.length - livTop20;
+
+    // Best and worst on each side (from full active list, not just top 10)
+    const livLeader  = livAllActive[0];
+    const pgaLeader  = pgaAllActive[0];
+    const livTrailer = livAllActive[livAllActive.length - 1];
+
+    const totalActive = activePlayers.length;
+    const pgaWinning  = pgaAvg !== null && livAvg !== null && pgaAvg <= livAvg;
+    const gap = pgaAvg !== null && livAvg !== null ? +(livAvg - pgaAvg).toFixed(1) : null;
+
+    // Snarky verdict
+    const verdicts = pgaWinning
+      ? gap >= 3  ? `The PGA Tour is absolutely embarrassing LIV right now. Even their best 10 trail by +${gap} strokes — the breakaway experiment is not going well.`
+      : gap >= 1  ? `PGA is cruising. LIV's best 10 still trail by ${gap} strokes per player on average. Integrity intact.`
+      :             `PGA leads on average — close enough that LIV hasn't completely embarrassed itself. Yet.`
+      : gap !== null && Math.abs(gap) >= 3 ? `LIV's best 10 happen to be playing well today. Enjoy it while it lasts.`
+      : gap !== null ? `LIV has a slight edge right now among their best 10. Scottie Scheffler probably wasn't available.`
+      :               `Scores still coming in.`;
+
+    // Meter: 0–100, 50 = parity, >50 = PGA dominance
+    const meterPct = gap !== null ? Math.min(100, Math.max(0, 50 + gap * 6)) : 50;
+
+    const playerRow = (g, side) => {
+      if (!g) return '';
+      const rankPos = rankOf(g.name);
+      const posStr  = rankPos === 1 ? 'T1' : `T${rankPos}`;
+      const scoreStr = g.cumToPar === 0 ? 'E' : (g.cumToPar > 0 ? '+' : '') + g.cumToPar;
+      const cls = colorCls2(g.cumToPar);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <span style="font-size:13px;font-weight:600;">${g.name}</span>
+          <span style="font-size:11px;color:var(--gray);margin-left:6px;">${side === 'liv' ? '⚡ LIV' : '🏌 PGA'}</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span style="font-size:12px;color:var(--gray);">${posStr}</span>
+          <span style="font-size:14px;font-weight:700;" class="${cls}">${scoreStr}</span>
+        </div>
+      </div>`;
+    };
+
+    pgaLivHtml = `
+    <div class="stats-card" style="margin-bottom:24px;border-color:rgba(201,168,76,0.3);">
+      <div class="stats-card-title"><span class="icon">⚔️</span> PGA Tour vs. LIV Golf</div>
+
+      <!-- Avg score comparison -->
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:18px;">
+        <div style="text-align:center;background:rgba(74,222,128,0.08);border-radius:8px;padding:12px;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:4px;">🏌 PGA Tour</div>
+          <div style="font-size:28px;font-weight:700;" class="${colorCls2(pgaAvg)}">${fmtAvg(pgaAvg)}</div>
+          <div style="font-size:11px;color:var(--gray);">avg · top ${pgaActive.length} PGA players</div>
+        </div>
+        <div style="text-align:center;color:var(--gray);font-size:13px;font-weight:600;">vs</div>
+        <div style="text-align:center;background:rgba(248,113,113,0.08);border-radius:8px;padding:12px;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:4px;">⚡ LIV Golf</div>
+          <div style="font-size:28px;font-weight:700;" class="${colorCls2(livAvg)}">${fmtAvg(livAvg)}</div>
+          <div style="font-size:11px;color:var(--gray);">avg · top ${livActive.length} LIV players</div>
+        </div>
+      </div>
+
+      <!-- Dominance meter -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-bottom:5px;">
+          <span>🏌 PGA Domination</span><span>LIV Domination ⚡</span>
+        </div>
+        <div style="height:10px;background:rgba(248,113,113,0.25);border-radius:5px;overflow:hidden;">
+          <div style="height:100%;width:${meterPct}%;background:linear-gradient(90deg,#4ade80,#c9a84c);border-radius:5px;transition:width 0.5s;"></div>
+        </div>
+        ${gap !== null ? `<div style="font-size:12px;color:var(--gray);margin-top:6px;text-align:center;">
+          ${pgaWinning ? `PGA leads by <strong style="color:#4ade80;">+${gap}</strong> strokes/player avg`
+                       : `LIV leads by <strong style="color:#f87171;">${Math.abs(gap)}</strong> stroke${Math.abs(gap)!==1?'s':''}/player avg`}
+        </div>` : ''}
+      </div>
+
+      <!-- Top 10 breakdown -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;text-align:center;">
+        <div style="background:rgba(10,21,16,0.5);border-radius:6px;padding:10px;">
+          <div style="font-size:22px;font-weight:700;color:#4ade80;">${pgaTop10}</div>
+          <div style="font-size:11px;color:var(--gray);">PGA in Top 10</div>
+        </div>
+        <div style="background:rgba(10,21,16,0.5);border-radius:6px;padding:10px;">
+          <div style="font-size:22px;font-weight:700;color:#f87171;">${livTop10}</div>
+          <div style="font-size:11px;color:var(--gray);">LIV in Top 10</div>
+        </div>
+        <div style="background:rgba(10,21,16,0.5);border-radius:6px;padding:10px;">
+          <div style="font-size:22px;font-weight:700;color:#4ade80;">${pgaTop20}</div>
+          <div style="font-size:11px;color:var(--gray);">PGA in Top 20</div>
+        </div>
+        <div style="background:rgba(10,21,16,0.5);border-radius:6px;padding:10px;">
+          <div style="font-size:22px;font-weight:700;color:#f87171;">${livTop20}</div>
+          <div style="font-size:11px;color:var(--gray);">LIV in Top 20</div>
+        </div>
+      </div>
+
+      <!-- Best on each side -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Best of Each Tour</div>
+        ${playerRow(pgaLeader, 'pga')}
+        ${playerRow(livLeader, 'liv')}
+      </div>
+
+      ${livTrailer && livTrailer !== livLeader ? `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">💀 Biggest LIV Disappointment</div>
+        ${playerRow(livTrailer, 'liv')}
+      </div>` : ''}
+
+      <!-- Verdict -->
+      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:12px;font-size:13px;line-height:1.5;color:var(--text);">
+        ${verdicts}
+      </div>
+    </div>`;
+  }
+
   // ---- BUILD HTML ----
   el.innerHTML = `
 
@@ -2532,6 +2891,9 @@ function renderStats() {
 
     <!-- LIVE REPORT CARD -->
     ${liveInsightsHtml}
+
+    <!-- PGA VS LIV -->
+    ${pgaLivHtml}
 
     <!-- MAIN GRID -->
     <div class="stats-grid">
