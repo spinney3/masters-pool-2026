@@ -136,6 +136,23 @@
     border-bottom: 1px solid rgba(201,168,76,0.08);
     transition: background 0.15s; cursor: default; align-items: center;
   }
+
+  .cut-line-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px;
+    background: rgba(180,40,40,0.10);
+    border-top: 1px solid rgba(200,60,60,0.45);
+    border-bottom: 1px solid rgba(200,60,60,0.45);
+    margin: 2px 0;
+  }
+  .cut-line-scissors { font-size: 14px; opacity: 0.85; }
+  .cut-line-label {
+    font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px;
+    color: #e06060; font-weight: 700;
+  }
+  .cut-line-count {
+    font-size: 11px; color: rgba(245,240,232,0.45); font-style: italic; margin-left: 4px;
+  }
   .sb-row:hover { background: rgba(201,168,76,0.05); }
   .sb-row.leader { background: rgba(201,168,76,0.08); }
 
@@ -1705,6 +1722,17 @@ function renderLeaderboard() {
   const unpinnedRows = scored.filter(e => !pinnedEntries.has(entryKey(e)));
   updatePinCount();
 
+  const activeUnpinned = unpinnedRows.filter(e => !e.eliminated);
+  const elimUnpinned   = unpinnedRows.filter(e => e.eliminated);
+
+  const cutLineDivider = (elimUnpinned.length > 0 && activeUnpinned.length > 0 && settings.status !== 'pre')
+    ? `<div class="cut-line-row">
+        <span class="cut-line-scissors">✂</span>
+        <span class="cut-line-label">CUT</span>
+        <span class="cut-line-count">${elimUnpinned.length} ${elimUnpinned.length === 1 ? 'entry' : 'entries'} eliminated</span>
+      </div>`
+    : '';
+
   const buildRow = (e, i, isLeader) => {
     const key = entryKey(e);
     const isPinned = pinnedEntries.has(key);
@@ -1762,7 +1790,9 @@ function renderLeaderboard() {
         <span></span><span>POS</span><span>ENTRY</span><span>SCORE</span><span>PICKS</span>
       </div>
       ${pinnedSection}
-      ${unpinnedRows.map((e, i) => buildRow(e, i, i === 0 && !e.eliminated && pinnedRows.length === 0)).join('')}
+      ${activeUnpinned.map((e, i) => buildRow(e, i, i === 0 && pinnedRows.length === 0)).join('')}
+      ${cutLineDivider}
+      ${elimUnpinned.map((e, i) => buildRow(e, i, false)).join('')}
     </div>`;
   container.innerHTML = html;
 }
@@ -2050,11 +2080,6 @@ async function fetchESPN() {
 
       const linescores = comp.linescores || [];
 
-      // Cut/WD: comp.status doesn't exist; ESPN may surface status in comp.score string or statistics
-      const scoreRaw = typeof comp.score === 'string' ? comp.score.toUpperCase() : '';
-      const cut = scoreRaw === 'CUT' || scoreRaw.includes('CUT');
-      const wd  = scoreRaw === 'WD'  || scoreRaw.includes('WD');
-
       // completedRounds: rounds where all 18 holes have been played (nested linescores.length === 18)
       const completedRounds = linescores.filter(ls =>
         Array.isArray(ls.linescores) && ls.linescores.length === 18
@@ -2065,9 +2090,44 @@ async function fetchESPN() {
         Array.isArray(ls.linescores) && ls.linescores.length > 0
       ).length;
 
-      // Cumulative to-par: comp.score is a plain string like "-3" or "E"
+      // Cut/WD detection — ESPN does NOT expose an explicit status field on competitors.
+      // Confirmed from live data: comp.status === undefined, comp.score is a plain cumulative
+      // string (e.g. "+18"), NOT "CUT". Cut players are identified by their linescore structure:
+      //   - linescores[2] EXISTS (ESPN adds a R3 placeholder for cut players)
+      //   - linescores[2] has NO nested `linescores` array (no hole data = never played R3)
+      //   - completedRounds === 2 while effectiveRound >= 3
+      // Active players playing R3 have linescores[2].linescores with actual hole data.
+      // Active players not yet started R3 have linescores.length === 2 (no R3 entry yet).
+      const scoreDisplay = (typeof comp.score === 'string'
+        ? comp.score
+        : (comp.score?.displayValue || comp.score?.value || '')).toUpperCase();
+      const statusTypeName = (comp.status?.type?.name || comp.status?.type?.id || '').toUpperCase();
+
+      // Cut detection: ESPN has no explicit status field. We use two signals:
+      // 1. Score/status string (fallback, in case ESPN API ever adds this)
+      const cutByString = scoreDisplay.includes('CUT') || statusTypeName.includes('CUT') || statusTypeName === 'STATUS_MISSED_CUT';
+      // 2. No tee time from Masters.com for R3+: cut players are never assigned a tee time
+      //    for the next round. Active players waiting to tee off DO have one.
+      //    Guard: only use this if espnTeeTimes has data (fetch succeeded).
+      const resolvedNameForCut = TEETIME_NAME_OVERRIDES[espnName] || espnName;
+      const hasTeeTimeData = Object.keys(espnTeeTimes).length > 0;
+      const cutByNoTeeTime = hasTeeTimeData
+        && effectiveRound >= 3
+        && completedRounds === 2
+        && roundsWithData === 2
+        && !espnTeeTimes[espnName]
+        && !espnTeeTimes[resolvedNameForCut]
+        && !espnTeeTimes[normalizeName(espnName)]
+        && !espnTeeTimes[normalizeName(resolvedNameForCut)];
+
+      const cut = cutByString || cutByNoTeeTime;
+      const wd  = scoreDisplay.includes('WD') || statusTypeName.includes('WD') || statusTypeName === 'STATUS_WITHDRAWN';
+
+
+
+      // Cumulative to-par: skip for cut/wd players (their score string is "CUT"/"WD")
       const scoreStr = typeof comp.score === 'string' ? comp.score : (comp.score?.displayValue || '');
-      const cumToPar = parseDisplayVal(scoreStr, Math.max(1, roundsWithData));
+      const cumToPar = (cut || wd) ? null : parseDisplayVal(scoreStr, Math.max(1, roundsWithData));
 
       // Per-round to-par from linescores (displayValue on the round object)
       const r = (i) => {
