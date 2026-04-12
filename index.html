@@ -946,6 +946,11 @@
             <input type="text" id="adminVenmo" placeholder="@username">
             <div class="tiebreaker-note">Updates the Venmo link everywhere on the site instantly. Saved to this browser only.</div>
           </div>
+          <div class="form-group">
+            <label>🎯 Tiebreaker #1 — Actual Winning Score (to par)</label>
+            <input type="number" id="adminWinningScore" placeholder="e.g. -11" min="-30" max="20">
+            <div class="tiebreaker-note">Enter the tournament winning score to auto-resolve TB1. TB2 (avg Sunday R4 score) calculates automatically once R4 data is live.</div>
+          </div>
           <button class="btn btn-gold btn-sm" onclick="saveSettings()">Save Settings</button>
         </div>
 
@@ -1663,7 +1668,20 @@ function calcEntryScore(entry) {
   const madeCut = golferScores.filter(g => g.status !== 'cut' && g.status !== 'wd').length;
   const eliminated = madeCut < 5 && settings.status !== 'pre';
 
-  return { total, golferScores, eliminated, madeCut };
+  // TB2: average Sunday (R4) to-par score of the top 5 counting golfers
+  // Only computable during/after R4; lower average is better (closer to pin wins)
+  let tb2 = null;
+  if (settings.round >= 4 || settings.status === 'final') {
+    const r4Scores = counting.map(c => {
+      const g = fieldData.find(f => f.name === c.name);
+      return (g && g.r4 !== null && g.r4 !== undefined) ? g.r4 : null;
+    });
+    if (r4Scores.every(s => s !== null)) {
+      tb2 = r4Scores.reduce((a, b) => a + b, 0) / 5;
+    }
+  }
+
+  return { total, golferScores, eliminated, madeCut, tb2 };
 }
 
 // ===== LEADERBOARD =====
@@ -1694,23 +1712,43 @@ function renderLeaderboard() {
   }
 
   // Score all entries
+  const winScore = (settings.winningScore !== null && settings.winningScore !== undefined && settings.winningScore !== '')
+    ? parseInt(settings.winningScore) : null;
+
   const scored = entries.map((e,i) => {
-    const { total, golferScores, eliminated, madeCut } = calcEntryScore(e);
-    return { ...e, total, golferScores, eliminated, madeCut, idx: i };
+    const { total, golferScores, eliminated, madeCut, tb2 } = calcEntryScore(e);
+    const tb1diff = winScore !== null ? Math.abs(parseInt(e.tiebreaker) - winScore) : null;
+    return { ...e, total, golferScores, eliminated, madeCut, tb2, tb1diff, idx: i };
   });
 
-  // Sort
+  // Sort — primary: score; TB1: closest to actual winning score; TB2: lower avg R4 wins
   scored.sort((a, b) => {
     if(a.eliminated && !b.eliminated) return 1;
     if(!a.eliminated && b.eliminated) return -1;
-    return a.total - b.total;
+    if (a.total !== b.total) return a.total - b.total;
+    // Tiebreaker 1: closest guess to actual winning score
+    if (winScore !== null) {
+      if (a.tb1diff !== b.tb1diff) return a.tb1diff - b.tb1diff;
+    }
+    // Tiebreaker 2: lower average R4 score of top 5 counting golfers
+    if (a.tb2 !== null && b.tb2 !== null && a.tb2 !== b.tb2) return a.tb2 - b.tb2;
+    return 0;
   });
 
-  // Assign positions
+  // Helper: are two entries truly tied after all tiebreakers?
+  const isTrueTied = (a, b) => {
+    if (a.eliminated !== b.eliminated || a.total !== b.total) return false;
+    if (winScore !== null && a.tb1diff !== b.tb1diff) return false;
+    if (a.tb2 !== null && b.tb2 !== null && a.tb2 !== b.tb2) return false;
+    return true;
+  };
+
+  // Assign positions (only mark T-tie when truly tied after all tiebreakers)
   let pos = 1;
   scored.forEach((e, i) => {
-    if(i > 0 && e.total === scored[i-1].total && e.eliminated === scored[i-1].eliminated) {
+    if(i > 0 && isTrueTied(e, scored[i-1])) {
       e.pos = 'T' + pos;
+      if (!scored[i-1].pos.startsWith('T')) scored[i-1].pos = 'T' + pos;
     } else {
       pos = i + 1;
       e.pos = e.eliminated ? 'E' : String(pos);
@@ -1764,7 +1802,16 @@ function renderLeaderboard() {
       <div class="pos-cell ${posClass}">${e.eliminated ? '<span style="color:var(--red);font-size:13px;">ELIM</span>' : e.pos}</div>
       <div>
         <div class="entry-name">${e.nickname || e.name}</div>
-        <div class="entry-meta">${e.name} · ${e.madeCut}/8 active · ${e.paid ? '✅ Paid' : '⏳ Awaiting payment'}</div>
+        <div class="entry-meta">${(() => {
+          const tbGuess = `TB1: ${e.tiebreaker > 0 ? '+' : ''}${e.tiebreaker}`;
+          const tb1DistPart = (winScore !== null)
+            ? ` <span style="color:${e.tb1diff === 0 ? '#4ade80' : 'var(--gray)'};">(off by ${e.tb1diff})</span>`
+            : '';
+          const tb2Part = (e.tb2 !== null && e.tb2 !== undefined)
+            ? ` · <span style="color:#93c5fd;">TB2 avg R4: ${e.tb2 > 0 ? '+' : ''}${e.tb2.toFixed(2)}</span>`
+            : '';
+          return `${e.name} · ${e.madeCut}/8 active · ${tbGuess}${tb1DistPart}${tb2Part} · ${e.paid ? '✅ Paid' : '⏳ Awaiting payment'}`;
+        })()}</div>
       </div>
       <div class="score-cell">${scoreDisp}</div>
       <div class="golfer-chips">${chips}</div>
@@ -2359,6 +2406,7 @@ function renderAdminPanel() {
   document.getElementById('adminRound').value = settings.round || 0;
   document.getElementById('adminStatus').value = settings.status || 'pre';
   document.getElementById('adminVenmo').value = VENMO;
+  document.getElementById('adminWinningScore').value = (settings.winningScore !== null && settings.winningScore !== undefined) ? settings.winningScore : '';
 
   // Financials
   renderAdminFinancials();
@@ -2514,6 +2562,8 @@ function deleteEntry(email, ts) {
 function saveSettings() {
   settings.round = parseInt(document.getElementById('adminRound').value);
   settings.status = document.getElementById('adminStatus').value;
+  const wsVal = document.getElementById('adminWinningScore').value;
+  settings.winningScore = (wsVal !== '' && wsVal !== null && wsVal !== undefined) ? parseInt(wsVal) : null;
   localStorage.setItem('mastersPool2026_settings', JSON.stringify(settings));
 
   // Update Venmo
